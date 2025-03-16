@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\StudentResource\Pages;
 use App\Filament\Resources\StudentResource\RelationManagers;
 use App\Models\Student;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\HtmlString;
 
-class StudentResource extends Resource
+class StudentResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Student::class;
 
@@ -89,22 +90,27 @@ class StudentResource extends Resource
                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
 //                            ->mask('999')
                             ->numeric()
+                            ->maxValue(15)
                             ->required(),
                         Forms\Components\TextInput::make('intelligence')
                             ->label('Intelligence Quotient')
                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
 //                            ->mask('999')
                             ->numeric()
+                            ->maxValue(15)
                             ->required(),
                         Forms\Components\TextInput::make('socio_economic')
                             ->label('Socio-Economic Form')
                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">20%</span>'))
                             ->numeric()
+                            ->maxValue(20)
                             ->required(),
                     ])
                     ->action(function($record, $data) {
                         $data['student_id'] = $record->id;
-                        auth()->user()->studentScores()->create($data);
+//                        dd($record);
+                        $record->score->update($data);
+//                        auth()->user()->studentScores()->create($data);
                     })
                     ->fillForm(function($record) {
                         try {
@@ -115,7 +121,8 @@ class StudentResource extends Resource
                         }
                     })
                     ->modalWidth('md')
-                    ->modalHeading(fn($record) => $record->fullname),
+                    ->modalHeading(fn($record) => $record->fullname)
+                    ->visible(fn ($record) => auth()->user()->can('score',  $record)),
                 Tables\Actions\EditAction::make(),
             ])
             ;
@@ -134,6 +141,25 @@ class StudentResource extends Resource
             'index' => Pages\ListStudents::route('/'),
             'create' => Pages\CreateStudent::route('/create'),
             'edit' => Pages\EditStudent::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+            'score'
         ];
     }
 }

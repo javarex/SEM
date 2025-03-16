@@ -17,12 +17,12 @@ class Student extends Model
             get: fn () => $this->last_name.' '.$this->first_name,
         );
     }
-    protected function totalScore(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->last_name.' '.$this->first_name,
-        );
-    }
+//    protected function totalScore(): Attribute
+//    {
+//        return Attribute::make(
+//            get: fn () => $this->last_name.' '.$this->first_name,
+//        );
+//    }
 
     public function scores(): HasMany
     {

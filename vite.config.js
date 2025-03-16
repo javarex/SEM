@@ -8,4 +8,8 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: 'ddosp.pictodev', // Allows access from network (use 'localhost' for local only)
+        port: 3001, // Change this to your desired port
+    },
 });

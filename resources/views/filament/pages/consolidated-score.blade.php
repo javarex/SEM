@@ -1,73 +1,81 @@
 <x-filament-panels::page>
-    <div class=" bg-white p-6 shadow-lg rounded-lg" x-data="judgingTable()">
+    <div class="bg-white p-6 shadow-lg rounded-lg"
+         x-data="{
+                students: @entangle('scores'), // Ensure it's an array
+                judges: @js($judges),
+                perPage: 20,
+                currentPage: 1,
+                paginatedStudents() {
+                    let start = (this.currentPage - 1) * this.perPage;
+                    let end = start + this.perPage;
+                    return this.students.slice(start, end);
+                },
+                totalPages() {
+                    return Math.ceil(this.students.length / this.perPage);
+                },
+                nextPage() {
+                    if (this.currentPage < this.totalPages()) {
+                        this.currentPage++;
+                    }
+                },
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                }
+            }"
+    x-init="() => console.log(students)">
         <h2 class="text-xl font-bold mb-4 text-gray-700">Judging Table</h2>
 
         <table class="w-full border-collapse border border-gray-300">
             <thead>
             <tr class="bg-gray-200">
-                <th class="border border-gray-300 px-4 py-2" rowspan="2">Judge</th>
-                <th class="border border-gray-300 px-4 py-2" colspan="3">Judge 1</th>
-                <th class="border border-gray-300 px-4 py-2" colspan="3">Judge 2</th>
+                <th class="border border-gray-300 px-4 py-2">Student Name</th>
+                <template x-for="(judge, index) in judges" :key="index">
+                    <th class="border border-gray-300 px-4 py-2 text-center" colspan="3" x-text="judge.name"></th>
+                </template>
             </tr>
             <tr class="bg-gray-200">
-                <th class="border border-gray-300 px-4 py-2">Emotional</th>
-                <th class="border border-gray-300 px-4 py-2">Intelligence</th>
-                <th class="border border-gray-300 px-4 py-2">Socio-Economic Form</th>
-                <th class="border border-gray-300 px-4 py-2">Emotional</th>
-                <th class="border border-gray-300 px-4 py-2">Intelligence</th>
-                <th class="border border-gray-300 px-4 py-2">Socio-Economic Form</th>
+                    <th></th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">Emotional</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">Intelligence</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">Socio-Economic</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">Emotional</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">Intelligence</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">Socio-Economic</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">Total Avg</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">Rank</th>
             </tr>
             </thead>
             <tbody>
-            <template x-for="(row, index) in rows" :key="index">
-                <tr class="bg-white">
-                    <td class="border border-gray-300 px-4 py-2">
-                        <input type="text" class="w-full px-2 py-1 border rounded" x-model="row.judge">
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2">
-                        <input type="number" min="0" max="10" class="w-full px-2 py-1 border rounded" x-model="row.judge1_emotional">
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2">
-                        <input type="number" min="0" max="10" class="w-full px-2 py-1 border rounded" x-model="row.judge1_intelligence">
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2">
-                        <input type="number" min="0" max="10" class="w-full px-2 py-1 border rounded" x-model="row.judge1_socio">
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2">
-                        <input type="number" min="0" max="10" class="w-full px-2 py-1 border rounded" x-model="row.judge2_emotional">
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2">
-                        <input type="number" min="0" max="10" class="w-full px-2 py-1 border rounded" x-model="row.judge2_intelligence">
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2">
-                        <input type="number" min="0" max="10" class="w-full px-2 py-1 border rounded" x-model="row.judge2_socio">
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2 text-center">
-                        <button @click="removeRow(index)" class="bg-red-500 text-white px-2 py-1 rounded">✖</button>
-                    </td>
+            <template x-for="student in paginatedStudents()" :key="student.name">
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2" x-text="student.name"></td>
+
+                    <!-- Instead of wrapping inside <template>, use x-for directly on <td> -->
+                    <template x-for="(scores, judge) in student.grades"
+                              :key="'judge-' + judge"
+                              >
+                        <template x-for="grade in scores">
+
+                            <td class="border border-gray-300 px-4 py-2" x-text="grade ?? 'N/A'"></td>
+                        </template>
+{{--                        <td class="border border-gray-300 px-4 py-2" x-text="scores.intelligence ?? 'N/A'"></td>--}}
+{{--                        <td class="border border-gray-300 px-4 py-2" x-text="scores.socio_economic ?? 'N/A'"></td>--}}
+                    </template>
+                    <td class="border border-gray-300 px-4 py-2" x-text="student.averageScore"></td>
+                    <td class="border border-gray-300 px-4 py-2" x-text="student.rank"></td>
                 </tr>
             </template>
             </tbody>
         </table>
 
+        <!-- Pagination Controls -->
         <div class="mt-4 flex justify-between">
-            <button @click="addRow()" class="bg-blue-500 text-white px-4 py-2 rounded">+ Add Row</button>
+            <button @click="prevPage()" :disabled="currentPage === 1" class="bg-gray-300 px-4 py-2 rounded disabled:opacity-50">Previous</button>
+            <span class="text-gray-700">Page <span x-text="currentPage"></span> of <span x-text="totalPages()"></span></span>
+            <button @click="nextPage()" :disabled="currentPage === totalPages()" class="bg-gray-300 px-4 py-2 rounded disabled:opacity-50">Next</button>
         </div>
     </div>
 
-    <script>
-        function judgingTable() {
-            return {
-                rows: [
-                    { judge: 'Judge 1', judge1_emotional: '', judge1_intelligence: '', judge1_socio: '', judge2_emotional: '', judge2_intelligence: '', judge2_socio: '' },
-                ],
-                addRow() {
-                    this.rows.push({ judge: '', judge1_emotional: '', judge1_intelligence: '', judge1_socio: '', judge2_emotional: '', judge2_intelligence: '', judge2_socio: '' });
-                },
-                removeRow(index) {
-                    this.rows.splice(index, 1);
-                }
-            }
-        }
-    </script>
 </x-filament-panels::page>
