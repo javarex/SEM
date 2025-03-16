@@ -34,6 +34,7 @@
                 <template x-for="(judge, index) in judges" :key="index">
                     <th class="border border-gray-300 px-4 py-2 text-center" colspan="3" x-text="judge.name"></th>
                 </template>
+                <th class="border border-gray-300 px-4 py-2" colspan="2"></th>
             </tr>
             <tr class="bg-gray-200">
                     <th></th>
@@ -58,13 +59,13 @@
                               >
                         <template x-for="grade in scores">
 
-                            <td class="border border-gray-300 px-4 py-2" x-text="grade ?? 'N/A'"></td>
+                            <td class="border border-gray-300 px-4 py-2" x-text="grade"></td>
                         </template>
 {{--                        <td class="border border-gray-300 px-4 py-2" x-text="scores.intelligence ?? 'N/A'"></td>--}}
 {{--                        <td class="border border-gray-300 px-4 py-2" x-text="scores.socio_economic ?? 'N/A'"></td>--}}
                     </template>
-                    <td class="border border-gray-300 px-4 py-2" x-text="student.averageScore"></td>
-                    <td class="border border-gray-300 px-4 py-2" x-text="student.rank"></td>
+                    <td class="border font-bold border-gray-300 px-4 py-2" x-text="student.averageScore"></td>
+                    <td class="border font-bold border-gray-300 px-4 py-2" x-text="student.rank"></td>
                 </tr>
             </template>
             </tbody>

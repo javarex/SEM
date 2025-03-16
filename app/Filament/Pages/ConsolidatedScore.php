@@ -22,7 +22,11 @@ class ConsolidatedScore extends Page
 
 //    public $scores;
 
-    public function  mount(): void
+    public function mount(): void
+    {
+        $this->fetchScore();
+    }
+    public function  fetchScore(): void
     {
         // Get all judges
         $this->judges = User::role('judge')->get();
