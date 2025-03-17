@@ -105,6 +105,8 @@ class StudentResource extends Resource implements HasShieldPermissions
                             ->numeric()
                             ->maxValue(20)
                             ->required(),
+                        Forms\Components\Textarea::make('remarks')
+                            ->label('Remarks')
                     ])
                     ->action(function($record, $data) {
                         $data['student_id'] = $record->id;
