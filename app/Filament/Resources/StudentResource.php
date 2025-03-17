@@ -11,6 +11,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Support\RawJs;
 use Filament\Tables;
+use Filament\Tables\Columns\ColumnGroup;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -56,16 +57,22 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->searchable(),
                 Tables\Columns\TextColumn::make('type')
                     ->searchable(),
+                // Tables\Columns\TextColumn::make('score.remarks')
+                //     ->label('Remarks')
+                //     ->searchable(),
 //                Tables\Columns\TextColumn::make('total')
 //                    ->default(fn($record) => $record->scores?->firstWhere('user_id', auth()->id())?->totalScore)
 //                ,
-                Tables\Columns\TextColumn::make('score.emotional')
-                    ->label('Emotional Quotient'),
-                Tables\Columns\TextColumn::make('score.intelligence')
-                    ->label('Intelligence Quotient'),
-                Tables\Columns\TextColumn::make('score.socio_economic')
-                    ->label('Socio-Economic Form'),
-                Tables\Columns\TextColumn::make('score.totalScore'),
+                ColumnGroup::make('Scores',[
+                    Tables\Columns\TextColumn::make('score.emotional')
+                        ->label('Emotional Quotient'),
+                    Tables\Columns\TextColumn::make('score.intelligence')
+                        ->label('Intelligence Quotient'),
+                    Tables\Columns\TextColumn::make('score.socio_economic')
+                        ->label('Socio-Economic Form'),
+                    Tables\Columns\TextColumn::make('score.totalScore')
+                        ->label('Total Score'),
+                ]),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -121,8 +128,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                     })
                     ->fillForm(function($record) {
                         try {
-
-                        return $record->scores?->firstWhere('user_id', auth()->id())->toArray();
+                            return $record->scores?->firstWhere('user_id', auth()->id())->toArray();
                         } catch (\Throwable $th) {
                             return [];
                         }
