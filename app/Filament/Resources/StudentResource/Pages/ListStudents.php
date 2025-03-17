@@ -25,6 +25,7 @@ class ListStudents extends ListRecords
             Actions\Action::make('generate_scores')
             ->label('Generate Student Scores')
             ->action('generateScores')
+            ->visible(fn() => auth()->user()->hasRole('super_admin')),
         ];
     }
 

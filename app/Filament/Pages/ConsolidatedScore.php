@@ -42,7 +42,7 @@ class ConsolidatedScore extends Page
                 AVG(student_scores.intelligence) as avg_intelligence,
                 AVG(student_scores.socio_economic) as avg_socio_economic')
             ->groupBy('students.id', 'students.first_name', 'judges.id', 'judges.name')
-            ->limit(20)
+//            ->limit(20)
             ->get();
 
         $formattedStudents = [];

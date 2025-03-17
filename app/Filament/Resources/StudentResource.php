@@ -109,8 +109,13 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->action(function($record, $data) {
                         $data['student_id'] = $record->id;
 //                        dd($record);
-                        $record->score->update($data);
-//                        auth()->user()->studentScores()->create($data);
+//                         ? $record->score->update($data) : auth()->user()->studentScores()->create($data);;
+                        if (!$record->score) {
+                            auth()->user()->studentScores()->create($data);
+                        } else {
+                            $has_score = $record->whereHas('score', fn($query) => $query->where('user_id', auth()->id()))->exists();
+                            $has_score ? $record->score->update($data) : auth()->user()->studentScores()->create($data);
+                        }
                     })
                     ->fillForm(function($record) {
                         try {
