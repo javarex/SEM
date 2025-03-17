@@ -2,20 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\StudentResource\Pages;
-use App\Filament\Resources\StudentResource\RelationManagers;
-use App\Models\Student;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Support\RawJs;
 use Filament\Tables;
-use Filament\Tables\Columns\ColumnGroup;
+use Livewire\Livewire;
+use App\Models\Student;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Support\RawJs;
+use Filament\Resources\Resource;
 use Illuminate\Support\HtmlString;
+use Filament\Tables\Columns\ColumnGroup;
+use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\StudentResource\Pages;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\StudentResource\RelationManagers;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Illuminate\Support\Facades\DB;
 
 class StudentResource extends Resource implements HasShieldPermissions
 {
@@ -72,7 +74,8 @@ class StudentResource extends Resource implements HasShieldPermissions
                         ->label('Socio-Economic Form'),
                     Tables\Columns\TextColumn::make('score.totalScore')
                         ->label('Total Score'),
-                ]),
+                ])
+                ->alignCenter(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -115,16 +118,28 @@ class StudentResource extends Resource implements HasShieldPermissions
                         Forms\Components\Textarea::make('remarks')
                             ->label('Remarks')
                     ])
-                    ->action(function($record, $data) {
-                        $data['student_id'] = $record->id;
-//                        dd($record);
-//                         ? $record->score->update($data) : auth()->user()->studentScores()->create($data);;
-                        if (!$record->score) {
-                            auth()->user()->studentScores()->create($data);
-                        } else {
-                            $has_score = $record->whereHas('score', fn($query) => $query->where('user_id', auth()->id()))->exists();
-                            $has_score ? $record->score->update($data) : auth()->user()->studentScores()->create($data);
+                    ->action(function($record, $data, $livewire) {
+                        DB::beginTransaction();
+
+                        try {
+                            $data['student_id'] = $record->id;
+                            // dd($record);
+                        // ? $record->score->update($data) : auth()->user()->studentScores()->create($data);;
+                            if (!$record->score) {
+                                auth()->user()->studentScores()->create($data);
+                            } else {
+                                $has_score = $record->whereHas('score', fn($query) => $query->where('user_id', auth()->id()))->exists();
+                                $has_score ? $record->score->update($data) : auth()->user()->studentScores()->create($data);
+                            }
+                            DB::commit();
+                            // Livewire::dispatch('refreshInterviewedStudent');
+                        } catch (\Throwable $th) {
+                            //throw $th;
+                            DB::rollBack();
+                            dd($th->getMessage());
                         }
+                       
+                        
                     })
                     ->fillForm(function($record) {
                         try {
@@ -140,6 +155,8 @@ class StudentResource extends Resource implements HasShieldPermissions
             ])
             ;
     }
+
+    
 
     public static function getRelations(): array
     {
