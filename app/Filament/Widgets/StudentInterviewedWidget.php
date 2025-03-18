@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\StudentScore;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\DB;
@@ -14,14 +15,19 @@ class StudentInterviewedWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $total = StudentScore::distinct('student_id')->get()
+        $data = StudentScore::get()
                     ->each(function($item) {
                         $item->date = $item->created_at->format('Y-m-d');
                     });
-        // dd($total->groupBy('date'));
-        return [
-            Stat::make('Overall Interviewed', $total->count()),
-            Stat::make(now()->format('F j, Y'), $total->where('date', now()->format('Y-m-d'))->count()),
-        ];
+        // dd($data->groupBy('student_id')->count());
+        $per_day = $data->groupBy('date')->map(function($item, $key) {
+            // dd($key, $item->groupBy('student_id'));
+            return Stat::make(Carbon::parse($key)->format('F j, Y'), $item->groupBy('student_id')->count());
+        })->toArray();
+
+
+        return collect([Stat::make('Overall Interviewed', $data->groupBy('student_id')->count())])
+                ->merge($per_day)
+                ->toArray();
     }
 }
