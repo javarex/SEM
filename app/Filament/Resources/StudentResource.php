@@ -148,6 +148,8 @@ class StudentResource extends Resource implements HasShieldPermissions
                             return [];
                         }
                     })
+                    ->closeModalByClickingAway(false)
+                    ->closeModalByEscaping()
                     ->modalWidth('md')
                     ->modalHeading(fn($record) => $record->fullname)
                     ->visible(fn ($record) => auth()->user()->can('score',  $record)),

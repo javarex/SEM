@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Events\Dispatchable;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -21,8 +22,7 @@ class InterviewedStudent extends Component
     {
         $user = auth()->user();
         // dd($user);
-
-        $count = $user->studentScores->count();
+        $count = $user->studentScores()->whereDate('created_at', now()->format('Y-m-d'))->count();
         return view('livewire.interviewed-student',[
             'count' => $count
         ]);
