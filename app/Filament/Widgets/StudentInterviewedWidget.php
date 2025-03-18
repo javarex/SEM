@@ -25,8 +25,17 @@ class StudentInterviewedWidget extends BaseWidget
             return Stat::make(Carbon::parse($key)->format('F j, Y'), $item->groupBy('student_id')->count());
         })->toArray();
 
+        $data_chart = $data->groupBy('date')->map(function($item, $key) {
+            return $item->groupBy('student_id')->count();
+        });
 
-        return collect([Stat::make('Overall Interviewed', $data->groupBy('student_id')->count())])
+        // dd($data->countBy('date'));
+        return collect([
+                Stat::make('Overall Interviewed', $data->groupBy('student_id')->count())
+                    ->color('success')
+                    ->description('Daily Interviewed Trend')
+                    ->chart($data_chart->toArray())
+                ])
                 ->merge($per_day)
                 ->toArray();
     }
