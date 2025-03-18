@@ -138,8 +138,8 @@ class StudentResource extends Resource implements HasShieldPermissions
                             DB::rollBack();
                             dd($th->getMessage());
                         }
-                       
-                        
+
+
                     })
                     ->fillForm(function($record) {
                         try {
@@ -151,14 +151,14 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false)
                     ->modalWidth('md')
-                    ->modalHeading(fn($record) => $record->fullname)
+                    ->modalHeading(fn($record) => $record?->fullname)
                     ->visible(fn ($record) => auth()->user()->can('score',  $record)),
                 Tables\Actions\EditAction::make(),
             ])
             ;
     }
 
-    
+
 
     public static function getRelations(): array
     {

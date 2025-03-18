@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\StudentResource\Pages\ListStudents;
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -72,6 +73,11 @@ class AdminPanelProvider extends PanelProvider
                     ListStudents::class
                 ]
                 // fn() => view('filament.custom.student.count-interviews')
+            )
+            ->font(
+                'Inter',
+                url: asset('css/fonts/fonts.css'),
+                provider: LocalFontProvider::class,
             )
             ->maxContentWidth('full')
             ->viteTheme('resources/css/filament/admin/theme.css')

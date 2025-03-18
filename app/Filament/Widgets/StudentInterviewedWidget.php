@@ -33,8 +33,9 @@ class StudentInterviewedWidget extends BaseWidget
         return collect([
                 Stat::make('Overall Interviewed', $data->groupBy('student_id')->count())
                     ->color('success')
-                    ->description('Daily Interviewed Trend')
-                    ->chart($data_chart->toArray())
+                    ->extraAttributes([
+                        'class' => 'bg-blue-500 text-white',
+                    ])
                 ])
                 ->merge($per_day)
                 ->toArray();
