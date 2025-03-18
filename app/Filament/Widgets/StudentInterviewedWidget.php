@@ -14,9 +14,14 @@ class StudentInterviewedWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $total = StudentScore::distinct('student_id')->groupBy(DB::raw('DATE_FORMAT("created_at", "%Y-%m-%d")'))->count();
+        $total = StudentScore::distinct('student_id')->get()
+                    ->each(function($item) {
+                        $item->date = $item->created_at->format('Y-m-d');
+                    });
+        // dd($total->groupBy('date'));
         return [
-            Stat::make('Total Interview', $total),
+            Stat::make('Overall Interviewed', $total->count()),
+            Stat::make(now()->format('F j, Y'), $total->where('date', now()->format('Y-m-d'))->count()),
         ];
     }
 }
