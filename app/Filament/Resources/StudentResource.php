@@ -10,14 +10,17 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
+use Filament\Actions\StaticAction;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Columns\ColumnGroup;
+use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\StudentResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\StudentResource\RelationManagers;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Illuminate\Support\Facades\DB;
 
 class StudentResource extends Resource implements HasShieldPermissions
 {
@@ -54,9 +57,12 @@ class StudentResource extends Resource implements HasShieldPermissions
             })
             ->columns([
                 Tables\Columns\TextColumn::make('fullname')
-                    ->searchable(['first_name',  'last_name']),
-                Tables\Columns\TextColumn::make('municipality')
-                    ->searchable(),
+                    ->searchable(['first_name',  'last_name'])
+                    ->description(fn($record) => $record->municipality),
+                Tables\Columns\TextColumn::make('score.created_at')
+                    ->searchable()
+                    ->dateTime('F j, Y')
+                    ->badge(fn($state) => $state?->toDateString() == now()->toDateString()),
                 Tables\Columns\TextColumn::make('type')
                     ->searchable(),
                 // Tables\Columns\TextColumn::make('score.remarks')
@@ -88,7 +94,17 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Filter::make('date')
+                ->form([
+                    DatePicker::make('date'),
+                ])
+                ->query(function (Builder $query, array $data): Builder {
+                    return $query
+                        ->when(
+                            $data['date'],
+                            fn (Builder $query, $date): Builder => $query->whereHas('score',fn($query) => $query->whereDate('created_at', $date)->where('user_id', auth()->id())),
+                        );
+                })
             ])
             ->actions([
                 Tables\Actions\Action::make('score')
@@ -118,6 +134,11 @@ class StudentResource extends Resource implements HasShieldPermissions
                         Forms\Components\Textarea::make('remarks')
                             ->label('Remarks')
                     ])
+                    ->modalSubmitAction(function(StaticAction $action, $record) {
+                        // dd();
+                        $action
+                            ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d'));
+                    })
                     ->action(function($record, $data, $livewire) {
                         DB::beginTransaction();
 
