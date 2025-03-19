@@ -16,7 +16,7 @@ class ListStudents extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-//            Actions\CreateAction::make(),
+            Actions\CreateAction::make(),
             \EightyNine\ExcelImport\ExcelImportAction::make()
                 ->slideOver()
                 ->color("primary")
