@@ -51,9 +51,15 @@ class StudentResource extends Resource implements HasShieldPermissions
     {
         return $table
             ->modifyQueryUsing(function ($query) {
-                $query->with(['score' =>  function($query) {
-                    $query->where('user_id', auth()->id());
-                }]);
+                $query
+                ->when(auth()->user()->isAdmin(), function($query) {
+                    $query->with('scores');
+                })
+                ->when(!auth()->user()->isAdmin(), function($query) {
+                    $query->with(['score' =>  function($query) {
+                        $query->where('user_id', auth()->id());
+                    }]);
+                });
             })
             ->columns([
                 Tables\Columns\TextColumn::make('fullname')
@@ -73,13 +79,58 @@ class StudentResource extends Resource implements HasShieldPermissions
 //                ,
                 ColumnGroup::make('Scores',[
                     Tables\Columns\TextColumn::make('score.emotional')
-                        ->label('Emotional Quotient'),
+                        ->label('Emotional Quotient')
+                        ->formatStateUsing(function($state, $record) {
+                            if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
+                                return view('filament.custom.student.scores', [
+                                    'scores' => $record->scores,
+                                    'column' => 'emotional'
+                                ]);
+                                return 'admin';
+                            } else {
+                                return $state;
+                            }
+                        })
+                        ->alignCenter(),
                     Tables\Columns\TextColumn::make('score.intelligence')
-                        ->label('Intelligence Quotient'),
+                        ->label('Intelligence Quotient')
+                        ->formatStateUsing(function($state, $record) {
+                            if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
+                                return view('filament.custom.student.scores', [
+                                    'scores' => $record->scores,
+                                    'column' => 'intelligence'
+                                ]);
+                            } else {
+                                return $state;
+                            }
+                        })
+                        ->alignCenter(),
                     Tables\Columns\TextColumn::make('score.socio_economic')
-                        ->label('Socio-Economic Form'),
+                        ->label('Socio-Economic Form')
+                        ->formatStateUsing(function($state, $record) {
+                            if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
+                                return view('filament.custom.student.scores', [
+                                    'scores' => $record->scores,
+                                    'column' => 'socio_economic'
+                                ]);
+                            } else {
+                                return $state;
+                            }
+                        })
+                        ->alignCenter(),
                     Tables\Columns\TextColumn::make('score.totalScore')
-                        ->label('Total Score'),
+                        ->label('Total Score')
+                        ->formatStateUsing(function($state, $record) {
+                            if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
+                                return view('filament.custom.student.scores', [
+                                    'scores' => $record->scores,
+                                    'column' => 'totalScore'
+                                ]);
+                            } else {
+                                return $state;
+                            }
+                        })
+                        ->alignCenter(),
                 ])
                 ->alignCenter(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -102,7 +153,18 @@ class StudentResource extends Resource implements HasShieldPermissions
                     return $query
                         ->when(
                             $data['date'],
-                            fn (Builder $query, $date): Builder => $query->whereHas('score',fn($query) => $query->whereDate('created_at', $date)->where('user_id', auth()->id())),
+                            fn (Builder $query, $date): Builder => $query
+                                    ->when(auth()->user()->isAdmin(),function($query) use($date){
+                                        $query->whereHas('scores', fn($query) => 
+                                            $query->whereDate('created_at', $date)
+                                        );
+                                    })
+                                    ->when(!auth()->user()->isAdmin(),function($query) use($date){
+                                        $query->whereHas('score',fn($query) => 
+                                            $query->whereDate('created_at', $date)
+                                            ->where('user_id', auth()->id())
+                                        );
+                                    }),
                         );
                 })
             ])
