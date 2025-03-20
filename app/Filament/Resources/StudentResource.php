@@ -60,6 +60,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->searchable(['first_name',  'last_name'])
                     ->description(fn($record) => $record->municipality),
                 Tables\Columns\TextColumn::make('score.created_at')
+                    ->label('Date')
                     ->searchable()
                     ->dateTime('F j, Y')
                     ->badge(fn($state) => $state?->toDateString() == now()->toDateString()),
@@ -137,7 +138,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->modalSubmitAction(function(StaticAction $action, $record) {
                         // dd();
                         $action
-                            ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d'));
+                            ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d') && $record->score?->created_at !== null);
                     })
                     ->action(function($record, $data, $livewire) {
                         DB::beginTransaction();
