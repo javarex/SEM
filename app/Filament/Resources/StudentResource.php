@@ -44,6 +44,8 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->maxLength(255),
                 Forms\Components\TextInput::make('type')
                     ->maxLength(255),
+                Forms\Components\Textarea::make('pcro_remarks')
+                    ->maxLength(255),
             ]);
     }
 
@@ -134,6 +136,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                         ->alignCenter(),
                 ])
                 ->alignCenter(),
+                Tables\Columns\TextColumn::make('exam_score'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -156,12 +159,12 @@ class StudentResource extends Resource implements HasShieldPermissions
                             $data['date'],
                             fn (Builder $query, $date): Builder => $query
                                     ->when(auth()->user()->isAdmin(),function($query) use($date){
-                                        $query->whereHas('scores', fn($query) => 
+                                        $query->whereHas('scores', fn($query) =>
                                             $query->whereDate('created_at', $date)
                                         );
                                     })
                                     ->when(!auth()->user()->isAdmin(),function($query) use($date){
-                                        $query->whereHas('score',fn($query) => 
+                                        $query->whereHas('score',fn($query) =>
                                             $query->whereDate('created_at', $date)
                                             ->where('user_id', auth()->id())
                                         );
@@ -238,6 +241,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->modalHeading(fn($record) => $record?->fullname)
                     ->visible(fn ($record) => auth()->user()->can('score',  $record)),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ;
     }

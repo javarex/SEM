@@ -1,3 +1,4 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../custom/filepond.css';
 
 @config 'tailwind.config.js';

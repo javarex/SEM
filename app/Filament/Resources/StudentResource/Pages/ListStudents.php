@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\StudentResource\Pages;
 
 use App\Filament\Resources\StudentResource;
+use App\Imports\StudentExamImport;
 use App\Imports\StudentImport;
 use App\Models\Student;
 use App\Models\User;
@@ -20,7 +21,8 @@ class ListStudents extends ListRecords
             \EightyNine\ExcelImport\ExcelImportAction::make()
                 ->slideOver()
                 ->color("primary")
-                ->use(StudentImport::class)
+                ->use(StudentExamImport::class)
+//                ->use(StudentImport::class)
                 ->visible(fn() => auth()->user()->hasRole('super_admin')),
             Actions\Action::make('generate_scores')
             ->label('Generate Student Scores')

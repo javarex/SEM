@@ -1,0 +1,43 @@
+/*!* Make barely visible borders visible *!*/
+
+/*.ring-gray-950\/5 {*/
+/*    @apply ring-gray-950/15;*/
+/*}*/
+
+/*.ring-gray-950\/10 {*/
+/*    @apply ring-gray-950/20;*/
+/*}*/
+
+/*.divide-gray-200 {*/
+/*    @apply divide-gray-300;*/
+/*}*/
+
+/*.text-gray-200 { !* Wizard SVG arrows *!*/
+/*    @apply text-gray-300;*/
+/*}*/
+
+/*.border-gray-200 {*/
+/*    @apply border-gray-300;*/
+/*}*/
+
+/*.fi-dropdown-panel .text-gray-700 {*/
+/*    @apply text-gray-900;*/
+/*}*/
+
+/*.filepond--root {*/
+/*    @apply ring-gray-950/20;*/
+/*}*/
+
+/*!* Change filepond label from multiple to singular *!*/
+
+/*.filepond--drop-label label {*/
+/*    @apply relative invisible;*/
+/*}*/
+
+/*.filepond--drop-label label span {*/
+/*    @apply absolute visible left-0 my-auto whitespace-nowrap;*/
+/*}*/
+
+/*.filepond--drop-label label span::before {*/
+/*    content: "Drop file or";*/
+/*}*/
