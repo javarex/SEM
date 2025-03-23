@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Columns\ColumnGroup;
+use App\Filament\Exports\StudentExporter;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Actions\ExportAction;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\StudentResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -148,6 +150,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->recordUrl(null)
             ->filters([
                 Filter::make('date')
                 ->form([
@@ -171,6 +174,13 @@ class StudentResource extends Resource implements HasShieldPermissions
                                     }),
                         );
                 })
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exporter(StudentExporter::class)
+                    ->color('success')
+                    ->icon('heroicon-s-arrow-right-start-on-rectangle')
+                    ->label('Export Results'),
             ])
             ->actions([
                 Tables\Actions\Action::make('score')

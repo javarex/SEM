@@ -1,7 +1,7 @@
 <div>
     <!-- Breathing in, I calm body and mind. Breathing out, I smile. - Thich Nhat Hanh -->
      @php
-        $colors = ['text-blue-500', 'text-green-500'];
+        $colors = ['text-blue-500', 'text-green-500', 'text-red-500'];
      @endphp
      @foreach($scores as $key => $score)
 
@@ -10,7 +10,6 @@
                 $colors[$key],
                 'font-bold',
                 'text-lg',
-                'text-center'
             ])
         >{{$score->$column}}</div>
      @endforeach

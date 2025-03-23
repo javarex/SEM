@@ -16,6 +16,7 @@ class StudentExamImport implements ToCollection
         DB::beginTransaction();
         try {
             $data = $collection->map(function ($row) {
+                // dd($row);
                 return [
                     'last_name' => $row[0],
                     'first_name' => $row[1],
@@ -24,6 +25,8 @@ class StudentExamImport implements ToCollection
                     'fullname' => $row[1].' '.$row[0],
                 ];
             });
+
+            // dd($data);
 
             DB::table('students')->upsert($data->toArray(), ['fullname'],  ['exam_score', 'pcro_remarks']);
             DB::commit();

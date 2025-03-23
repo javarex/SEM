@@ -35,6 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->databaseNotifications()
 //            ->defaultThemeMode(ThemeMode::Light)
             ->colors([
                 'primary' => Color::Blue,
@@ -43,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Gray,
                 'info' => Color::Blue,
                 'success' => Color::Emerald,
+                'green' => Color::Green,
                 'warning' => Color::Orange,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -88,6 +90,8 @@ class AdminPanelProvider extends PanelProvider
             )
             ->maxContentWidth('full')
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->sidebarCollapsibleOnDesktop();
+            ->spa()
+            ->sidebarCollapsibleOnDesktop()
+            ->unsavedChangesAlerts();
     }
 }
