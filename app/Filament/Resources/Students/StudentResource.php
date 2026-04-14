@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Students;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
@@ -11,9 +11,9 @@ use Filament\Actions\Action;
 use Throwable;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
-use App\Filament\Resources\StudentResource\Pages\ListStudents;
-use App\Filament\Resources\StudentResource\Pages\CreateStudent;
-use App\Filament\Resources\StudentResource\Pages\EditStudent;
+use App\Filament\Resources\Students\Pages\ListStudents;
+use App\Filament\Resources\Students\Pages\CreateStudent;
+use App\Filament\Resources\Students\Pages\EditStudent;
 use Filament\Forms;
 use Filament\Tables;
 use Livewire\Livewire;

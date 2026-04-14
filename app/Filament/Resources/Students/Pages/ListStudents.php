@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\StudentResource\Pages;
+namespace App\Filament\Resources\Students\Pages;
 
 use Filament\Actions\CreateAction;
 use EightyNine\ExcelImport\ExcelImportAction;
 use Filament\Actions\Action;
 use App\Exports\StudentExport;
 use App\Filament\Exports\StudentExporter;
-use App\Filament\Resources\StudentResource;
+use App\Filament\Resources\Students\StudentResource;
 use App\Imports\StudentExamImport;
 use App\Imports\StudentImport;
 use App\Models\Student;
