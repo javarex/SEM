@@ -2,6 +2,7 @@
 
 namespace App\Exports\Sheets;
 
+use Throwable;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -14,8 +15,8 @@ class StudentCategorySheet implements FromCollection, WithHeadings, WithTitle, W
 {
     
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return Collection
+     */
     protected $collection;
     protected $key;
 
@@ -63,7 +64,7 @@ class StudentCategorySheet implements FromCollection, WithHeadings, WithTitle, W
         try {
             return "{$this->key}";
             //code...
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             dd($this->key);
         }
     }

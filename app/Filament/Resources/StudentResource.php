@@ -2,51 +2,61 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\ExportAction;
+use Filament\Actions\Action;
+use Throwable;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use App\Filament\Resources\StudentResource\Pages\ListStudents;
+use App\Filament\Resources\StudentResource\Pages\CreateStudent;
+use App\Filament\Resources\StudentResource\Pages\EditStudent;
 use Filament\Forms;
 use Filament\Tables;
 use Livewire\Livewire;
 use App\Models\Student;
-use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Support\RawJs;
 use Filament\Resources\Resource;
-use Filament\Actions\StaticAction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Columns\ColumnGroup;
 use App\Filament\Exports\StudentExporter;
 use Filament\Forms\Components\DatePicker;
-use Filament\Tables\Actions\ExportAction;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\StudentResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\StudentResource\RelationManagers;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Filament\Tables\Columns\ToggleColumn;
 
 class StudentResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Student::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('first_name')
+        return $schema
+            ->components([
+                TextInput::make('first_name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('middle_name')
+                TextInput::make('middle_name')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('last_name')
+                TextInput::make('last_name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('municipality')
+                TextInput::make('municipality')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('type')
+                TextInput::make('type')
                     ->maxLength(255),
-                Forms\Components\Textarea::make('pcro_remarks')
+                Textarea::make('pcro_remarks')
                     ->maxLength(255),
             ]);
     }
@@ -66,15 +76,15 @@ class StudentResource extends Resource implements HasShieldPermissions
                 });
             })
             ->columns([
-                Tables\Columns\TextColumn::make('fullname')
+                TextColumn::make('fullname')
                     ->searchable(['first_name',  'last_name'])
                     ->description(fn($record) => $record->municipality),
-                Tables\Columns\TextColumn::make('score.created_at')
+                TextColumn::make('score.created_at')
                     ->label('Date')
                     ->searchable()
                     ->dateTime('F j, Y')
                     ->badge(fn($state) => $state?->toDateString() == now()->toDateString()),
-                Tables\Columns\TextColumn::make('type')
+                TextColumn::make('type')
                     ->searchable(),
                 // Tables\Columns\TextColumn::make('score.remarks')
                 //     ->label('Remarks')
@@ -83,7 +93,7 @@ class StudentResource extends Resource implements HasShieldPermissions
 //                    ->default(fn($record) => $record->scores?->firstWhere('user_id', auth()->id())?->totalScore)
 //                ,
                 ColumnGroup::make('Scores',[
-                    Tables\Columns\TextColumn::make('score.emotional')
+                    TextColumn::make('score.emotional')
                         ->label('Emotional Quotient')
                         ->formatStateUsing(function($state, $record) {
                             if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
@@ -97,7 +107,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                             }
                         })
                         ->alignCenter(),
-                    Tables\Columns\TextColumn::make('score.intelligence')
+                    TextColumn::make('score.intelligence')
                         ->label('Intelligence Quotient')
                         ->formatStateUsing(function($state, $record) {
                             if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
@@ -110,7 +120,8 @@ class StudentResource extends Resource implements HasShieldPermissions
                             }
                         })
                         ->alignCenter(),
-                    Tables\Columns\TextColumn::make('score.socio_economic')
+                    ToggleColumn::make('for_interview'),
+                    TextColumn::make('score.socio_economic')
                         ->label('Socio-Economic Form')
                         ->formatStateUsing(function($state, $record) {
                             if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
@@ -123,7 +134,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                             }
                         })
                         ->alignCenter(),
-                    Tables\Columns\TextColumn::make('score.totalScore')
+                    TextColumn::make('score.totalScore')
                         ->label('Total Score')
                         ->formatStateUsing(function($state, $record) {
                             if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
@@ -138,14 +149,14 @@ class StudentResource extends Resource implements HasShieldPermissions
                         ->alignCenter(),
                 ])
                 ->alignCenter(),
-                Tables\Columns\TextColumn::make('exam_score'),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('exam_score'),
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 //                Tables\Columns\TextColumn::make('total1')
 //                    ->default(fn($record) => dd($record->scores)),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -153,7 +164,7 @@ class StudentResource extends Resource implements HasShieldPermissions
             ->recordUrl(null)
             ->filters([
                 Filter::make('date')
-                ->form([
+                ->schema([
                     DatePicker::make('date'),
                 ])
                 ->query(function (Builder $query, array $data): Builder {
@@ -182,38 +193,39 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->icon('heroicon-s-arrow-right-start-on-rectangle')
                     ->label('Export Results'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('score')
+            ->recordActions([
+                Action::make('score')
                     ->label('Score')
                     ->icon('heroicon-s-star')
-                    ->form(fn (Student $student) => [
-                        Forms\Components\TextInput::make('emotional')
+                    ->schema(fn (Student $student) => [
+                        TextInput::make('emotional')
                             ->label('Emotional Quotient')
                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
 //                            ->mask('999')
                             ->numeric()
                             ->maxValue(15)
                             ->required(),
-                        Forms\Components\TextInput::make('intelligence')
+                        TextInput::make('intelligence')
                             ->label('Intelligence Quotient')
                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
 //                            ->mask('999')
                             ->numeric()
                             ->maxValue(15)
                             ->required(),
-                        Forms\Components\TextInput::make('socio_economic')
+                        TextInput::make('socio_economic')
                             ->label('Socio-Economic Form')
                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">20%</span>'))
                             ->numeric()
                             ->maxValue(20)
                             ->required(),
-                        Forms\Components\Textarea::make('remarks')
+                        Textarea::make('remarks')
                             ->label('Remarks')
                     ])
-                    ->modalSubmitAction(function(StaticAction $action, $record) {
+                    ->modalSubmitAction(function(Action $action, $record) {
                         // dd();
                         $action
-                            ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d') && $record->score?->created_at !== null);
+                            // ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d') && $record->score?->created_at !== null)
+                            ;
                     })
                     ->action(function($record, $data, $livewire) {
                         DB::beginTransaction();
@@ -230,7 +242,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                             }
                             DB::commit();
                             // Livewire::dispatch('refreshInterviewedStudent');
-                        } catch (\Throwable $th) {
+                        } catch (Throwable $th) {
                             //throw $th;
                             DB::rollBack();
                             dd($th->getMessage());
@@ -241,7 +253,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->fillForm(function($record) {
                         try {
                             return $record->scores?->firstWhere('user_id', auth()->id())->toArray();
-                        } catch (\Throwable $th) {
+                        } catch (Throwable $th) {
                             return [];
                         }
                     })
@@ -250,8 +262,8 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->modalWidth('md')
                     ->modalHeading(fn($record) => $record?->fullname)
                     ->visible(fn ($record) => auth()->user()->can('score',  $record)),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
             ;
     }
@@ -268,9 +280,9 @@ class StudentResource extends Resource implements HasShieldPermissions
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListStudents::route('/'),
-            'create' => Pages\CreateStudent::route('/create'),
-            'edit' => Pages\EditStudent::route('/{record}/edit'),
+            'index' => ListStudents::route('/'),
+            'create' => CreateStudent::route('/create'),
+            'edit' => EditStudent::route('/{record}/edit'),
         ];
     }
 

@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\StudentResource\Pages;
 
+use Filament\Actions\CreateAction;
+use EightyNine\ExcelImport\ExcelImportAction;
+use Filament\Actions\Action;
 use App\Exports\StudentExport;
 use App\Filament\Exports\StudentExporter;
 use App\Filament\Resources\StudentResource;
@@ -21,19 +24,19 @@ class ListStudents extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
-            \EightyNine\ExcelImport\ExcelImportAction::make()
+            CreateAction::make(),
+            ExcelImportAction::make()
                 ->slideOver()
                 ->color("primary")
                 ->use(StudentExamImport::class)
 //                ->use(StudentImport::class)
                 ->visible(fn() => auth()->user()->hasRole('super_admin')),
-            Actions\Action::make('export')
+            Action::make('export')
                 ->action('export')
                 ->color('success')
                 ->icon('heroicon-s-arrow-right-start-on-rectangle')
                 ->label('Export Results'),
-            Actions\Action::make('generate_scores')
+            Action::make('generate_scores')
             ->requiresConfirmation()
             ->label('Generate Student Scores')
             ->action('generateScores')

@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use Throwable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -27,7 +28,7 @@ class StudentImport implements ToCollection
             });
 
             DB::commit();
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             dd($th->getMessage());
         }

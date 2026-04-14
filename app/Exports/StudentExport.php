@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Collection;
 use App\Models\Student;
 use App\Traits\HasAverage;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -18,10 +19,8 @@ class StudentExport implements WithMultipleSheets
 
     use Exportable;
     /**
-    * @return \Illuminate\Support\Collection
-    */
-    
-
+     * @return Collection
+     */
     // public function collection()
     // {
     //     return Student::with('scores')
@@ -44,7 +43,6 @@ class StudentExport implements WithMultipleSheets
     //             ]);
     //     // return Student::select('fullname')->get();
     // }
-
     public function sheets(): array
     {
             $sheets =Student::with('scores')

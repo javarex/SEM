@@ -13,9 +13,9 @@ class ConsolidatedScore extends Page
 {
     use HasPageShield;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament.pages.consolidated-score';
+    protected string $view = 'filament.pages.consolidated-score';
 
     public $scores;
     public $judges;

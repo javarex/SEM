@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use Throwable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -30,7 +31,7 @@ class StudentExamImport implements ToCollection
 
             DB::table('students')->upsert($data->toArray(), ['fullname'],  ['exam_score', 'pcro_remarks']);
             DB::commit();
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             DB::rollBack();
             dd($th->getMessage());
         }

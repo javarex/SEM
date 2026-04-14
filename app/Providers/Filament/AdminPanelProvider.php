@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
 //            ->defaultThemeMode(ThemeMode::Light)
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Yellow,
                 'red' => Color::Red,
                 'danger' => Color::Rose,
                 'gray' => Color::Gray,
