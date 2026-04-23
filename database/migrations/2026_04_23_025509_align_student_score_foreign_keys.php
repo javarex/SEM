@@ -21,7 +21,7 @@ return new class extends Migration
         }
 
         DB::statement('ALTER TABLE `student_scores` MODIFY `student_id` BIGINT UNSIGNED NOT NULL, MODIFY `user_id` BIGINT UNSIGNED NOT NULL');
-
+ 
         Schema::table('student_scores', function (Blueprint $table) {
             $table->foreign('student_id', 'student_scores_student_id_foreign')
                 ->references('id')
