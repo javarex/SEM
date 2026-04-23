@@ -2,18 +2,22 @@
 
 namespace App\Filament\Pages;
 
-use BezhanSalleh\FilamentShield\Traits\HasPageShield;
+use Illuminate\Contracts\Support\Htmlable;
 
 class Dashboard extends \Filament\Pages\Dashboard
 {
-    // use HasPageShield;
-    // protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected string $view = 'filament.pages.dashboard';
 
-    // protected static string $view = 'filament.pages.dashboard';
+    public function getHeading(): string|Htmlable|null
+    {
+        return null;
+    }
 
-    // public static function shouldRegisterNavigation(): bool
-    // {
-    //     return auth()->user()->hasAnyRole(['super_admin', 'pswdo']);
-    // }
-
+    public function getColumns(): int|array
+    {
+        return [
+            'md' => 2,
+            'xl' => 4,
+        ];
+    }
 }

@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Student extends Model
 {
+    use HasFactory;
+
     protected $guarded = [];
 
     protected function fullname(): Attribute
@@ -17,12 +20,12 @@ class Student extends Model
             get: fn () => $this->last_name.' '.$this->first_name,
         );
     }
-//    protected function totalScore(): Attribute
-//    {
-//        return Attribute::make(
-//            get: fn () => $this->last_name.' '.$this->first_name,
-//        );
-//    }
+    //    protected function totalScore(): Attribute
+    //    {
+    //        return Attribute::make(
+    //            get: fn () => $this->last_name.' '.$this->first_name,
+    //        );
+    //    }
 
     public function scores(): HasMany
     {
@@ -33,5 +36,4 @@ class Student extends Model
     {
         return $this->hasOne(StudentScore::class);
     }
-
 }

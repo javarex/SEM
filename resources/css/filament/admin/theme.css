@@ -306,3 +306,50 @@
         transition: none;
     }
 }
+
+.sem-dashboard .fi-wi-stats-overview-stat {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgb(229 231 235);
+    border-radius: 1.35rem;
+    background:
+        radial-gradient(circle at top right, rgb(250 204 21 / 16%), transparent 12rem),
+        rgb(255 255 255);
+    box-shadow: 0 1rem 2.5rem rgb(15 23 42 / 7%);
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color 180ms ease;
+}
+
+.dark .sem-dashboard .fi-wi-stats-overview-stat {
+    border-color: rgb(31 41 55);
+    background:
+        radial-gradient(circle at top right, rgb(250 204 21 / 10%), transparent 12rem),
+        rgb(17 24 39);
+}
+
+.sem-dashboard .fi-wi-stats-overview-stat:hover {
+    border-color: rgb(245 158 11 / 45%);
+    box-shadow: 0 1.25rem 3rem rgb(15 23 42 / 10%);
+    transform: translateY(-2px);
+}
+
+.sem-dashboard .fi-wi-stats-overview-stat::before {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0.3rem;
+    background: linear-gradient(180deg, #facc15, #10b981);
+    content: '';
+}
+
+.sem-dashboard .fi-wi-stats-overview-stat-label {
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.sem-dashboard .fi-wi-stats-overview-stat-value {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    letter-spacing: -0.05em;
+}

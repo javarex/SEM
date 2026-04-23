@@ -8,24 +8,31 @@ use App\Filament\Resources\Students\Pages\CreateStudent;
 use App\Filament\Resources\Students\Pages\EditStudent;
 use App\Filament\Resources\Students\Pages\ListStudents;
 use App\Models\Student;
+use App\Models\StudentScore;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ExportAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\View as SchemaView;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Columns\ColumnGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Throwable;
 
@@ -185,32 +192,58 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->label('Export Results'),
             ])
             ->recordActions([
+                ViewAction::make()
+                    ->label('View')
+                    ->modalHeading(fn (Student $record): string => 'Student Details')
+                    // ->modalHeading(fn (Student $record): string => $record->getRawOriginal('fullname') ?: trim("{$record->first_name} {$record->last_name}") ?: 'Student Details')
+                    ->modalWidth('4xl')
+                    ->schema([])
+                    ->modalContent(fn (Student $record): View => view('filament.resources.students.actions.view-student', [
+                        'record' => $record,
+                    ])),
                 Action::make('score')
                     ->label('Score')
                     ->icon('heroicon-s-star')
                     ->schema(fn (Student $student) => [
-                        TextInput::make('emotional')
-                            ->label('Emotional Quotient')
-                            ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
-//                            ->mask('999')
-                            ->numeric()
-                            ->maxValue(15)
-                            ->required(),
-                        TextInput::make('intelligence')
-                            ->label('Intelligence Quotient')
-                            ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
-//                            ->mask('999')
-                            ->numeric()
-                            ->maxValue(15)
-                            ->required(),
-                        TextInput::make('socio_economic')
-                            ->label('Socio-Economic Form')
-                            ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">20%</span>'))
-                            ->numeric()
-                            ->maxValue(20)
-                            ->required(),
-                        Textarea::make('remarks')
-                            ->label('Remarks'),
+                        Grid::make([
+                            'default' => 1,
+                            'lg' => 2,
+                        ])
+                            ->schema([
+                                SchemaView::make('filament.resources.students.actions.view-student')
+                                    ->viewData([
+                                        'record' => $student,
+                                    ])
+                                    ->columnSpan(1),
+                                Section::make('Scoring Panel')
+                                    ->description('Enter only the evaluation scores and remarks.')
+                                    ->schema([
+                                        TextInput::make('emotional')
+                                            ->label('Emotional Quotient')
+                                            ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
+                                            //                            ->mask('999')
+                                            ->numeric()
+                                            ->maxValue(15)
+                                            ->required(),
+                                        TextInput::make('intelligence')
+                                            ->label('Intelligence Quotient')
+                                            ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
+                                            //                            ->mask('999')
+                                            ->numeric()
+                                            ->maxValue(15)
+                                            ->required(),
+                                        TextInput::make('socio_economic')
+                                            ->label('Socio-Economic Form')
+                                            ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">20%</span>'))
+                                            ->numeric()
+                                            ->maxValue(20)
+                                            ->required(),
+                                        Textarea::make('remarks')
+                                            ->label('Remarks'),
+                                    ])
+                                    ->columnSpan(1),
+                            ])
+                            ->columnSpanFull(),
                     ])
                     ->modalSubmitAction(function (Action $action, $record) {
                         // dd();
@@ -218,41 +251,62 @@ class StudentResource extends Resource implements HasShieldPermissions
                         // ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d') && $record->score?->created_at !== null)
 
                     })
-                    ->action(function ($record, $data, $livewire) {
+                    ->action(function (Student $record, array $data): void {
+                        throw_unless(auth()->user()->can('score', $record), ValidationException::withMessages([
+                            'score' => 'This student score can no longer be edited.',
+                        ]));
+
                         DB::beginTransaction();
 
                         try {
-                            $data['student_id'] = $record->id;
-                            // dd($record);
-                            // ? $record->score->update($data) : auth()->user()->studentScores()->create($data);;
-                            if (! $record->score) {
-                                auth()->user()->studentScores()->create($data);
+                            $scoreData = collect($data)
+                                ->only(StudentScore::editableFields())
+                                ->all();
+
+                            $score = StudentScore::query()
+                                ->where('student_id', $record->id)
+                                ->where('user_id', auth()->id())
+                                ->latest('id')
+                                ->first();
+
+                            if ($score === null) {
+                                auth()->user()->studentScores()->create([
+                                    ...$scoreData,
+                                    'student_id' => $record->id,
+                                ]);
                             } else {
-                                $has_score = $record->whereHas('score', fn ($query) => $query->where('user_id', auth()->id()))->exists();
-                                $has_score ? $record->score->update($data) : auth()->user()->studentScores()->create($data);
+                                throw_unless($score->isEditableBy(auth()->user()), ValidationException::withMessages([
+                                    'score' => 'This student score can no longer be edited.',
+                                ]));
+
+                                $score->update($scoreData);
                             }
+
                             DB::commit();
                             // Livewire::dispatch('refreshInterviewedStudent');
                         } catch (Throwable $th) {
-                            // throw $th;
                             DB::rollBack();
-                            dd($th->getMessage());
+
+                            throw $th;
                         }
 
                     })
-                    ->fillForm(function ($record) {
-                        try {
-                            return $record->scores?->firstWhere('user_id', auth()->id())->toArray();
-                        } catch (Throwable $th) {
-                            return [];
-                        }
+                    ->fillForm(function (Student $record): array {
+                        $score = StudentScore::query()
+                            ->where('student_id', $record->id)
+                            ->where('user_id', auth()->id())
+                            ->latest('id')
+                            ->first();
+
+                        return $score?->only(StudentScore::editableFields()) ?? [];
                     })
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false)
-                    ->modalWidth('md')
+                    ->modalWidth('6xl')
                     ->modalHeading(fn ($record) => $record?->fullname)
-                    ->visible(fn ($record) => auth()->user()->can('score', $record)),
-                EditAction::make(),
+                    ->visible(fn (Student $record): bool => auth()->user()->can('score', $record)),
+                EditAction::make()
+                    ->visible(fn (Student $record): bool => auth()->user()->can('update', $record)),
                 DeleteAction::make(),
             ]);
     }
