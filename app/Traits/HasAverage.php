@@ -4,8 +4,8 @@ namespace App\Traits;
 
 trait HasAverage
 {
-    public function getAverage($scores)
+    public function getAverage(iterable $scores): float
     {
-        dd($scores);
+        return (float) (collect($scores)->average() ?? 0);
     }
 }

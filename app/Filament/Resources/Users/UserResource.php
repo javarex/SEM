@@ -34,6 +34,7 @@ class UserResource extends Resource
                 TextInput::make('email')
                     ->email()
                     ->required()
+                    ->unique(ignoreRecord: true)
                     ->maxLength(255),
                 TextInput::make('password')
                     ->dehydrated(fn ($operation, $state) => $operation === 'create' || ($state !== null && strtolower($operation) === 'edit'))
@@ -75,7 +76,8 @@ class UserResource extends Resource
             ->recordActions([
                 EditAction::make(),
                 Impersonate::make()
-                    ->label('login'),
+                    ->label('login')
+                    ->visible(fn (): bool => auth()->user()?->hasRole('super_admin') ?? false),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -76,7 +76,7 @@ class AdminPanelProvider extends PanelProvider
             // TablesRenderHook::TOOLBAR_SEARCH_BEFORE
             ->renderHook(
                 TablesRenderHook::TOOLBAR_START,
-                fn (): string => auth()->user()->hasRole('judge') ? Blade::render('@livewire("interviewed-student")') : '',
+                fn (): string => auth()->user()?->hasRole('panelist') ? Blade::render('@livewire("interviewed-student")') : '',
                 scopes: [
                     ListStudents::class,
                 ]

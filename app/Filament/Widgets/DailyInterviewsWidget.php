@@ -6,6 +6,8 @@ use App\Models\StudentScore;
 use Carbon\Carbon;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Locked;
+use Throwable;
 
 class DailyInterviewsWidget extends Widget
 {
@@ -15,6 +17,7 @@ class DailyInterviewsWidget extends Widget
 
     protected int|string|array $columnSpan = 'full';
 
+    #[Locked]
     public ?string $selectedDate = null;
 
     public bool $isModalOpen = false;
@@ -24,26 +27,31 @@ class DailyInterviewsWidget extends Widget
      */
     public function getDateCards(): array
     {
-        return StudentScore::get()
-            ->each(function (StudentScore $score): void {
-                $score->date = $score->created_at->format('Y-m-d');
-            })
-            ->groupBy('date')
-            ->sortKeysDesc()
-            ->map(fn (Collection $scores, string $date): array => [
-                'date' => $date,
-                'label' => Carbon::parse($date)->format('F j, Y'),
-                'count' => $scores->groupBy('student_id')->count(),
+        $this->authorizeViewing();
+
+        return StudentScore::query()
+            ->selectRaw('DATE(created_at) as interview_date, COUNT(DISTINCT student_id) as students_count')
+            ->whereNotNull('created_at')
+            ->groupByRaw('DATE(created_at)')
+            ->orderByDesc('interview_date')
+            ->get()
+            ->map(fn (StudentScore $score): array => [
+                'date' => (string) $score->interview_date,
+                'label' => Carbon::parse($score->interview_date)->format('F j, Y'),
+                'count' => (int) $score->students_count,
             ])
-            ->values()
             ->all();
     }
 
     public function showInterviewedStudents(string $date): void
     {
-        abort_unless($this->dateExists($date), 404);
+        $this->authorizeViewing();
 
-        $this->selectedDate = $date;
+        $normalizedDate = $this->normalizeDate($date);
+
+        abort_unless($normalizedDate !== null && $this->dateExists($normalizedDate), 404);
+
+        $this->selectedDate = $normalizedDate;
         $this->isModalOpen = true;
     }
 
@@ -62,7 +70,7 @@ class DailyInterviewsWidget extends Widget
 
     public function getSelectedInterviewScores(): Collection
     {
-        if (! $this->selectedDate) {
+        if (! static::canView() || ! $this->selectedDate || ! $this->dateExists($this->selectedDate)) {
             return collect();
         }
 
@@ -75,10 +83,36 @@ class DailyInterviewsWidget extends Widget
             ->values();
     }
 
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) (
+            $user?->can('View:DailyInterviewsWidget')
+            || $user?->can('View:StudentInterviewedWidget')
+            || $user?->hasRole('super_admin')
+        );
+    }
+
+    protected function authorizeViewing(): void
+    {
+        abort_unless(static::canView(), 403);
+    }
+
     protected function dateExists(string $date): bool
     {
         return StudentScore::query()
+            ->whereNotNull('created_at')
             ->whereDate('created_at', $date)
             ->exists();
+    }
+
+    protected function normalizeDate(string $date): ?string
+    {
+        try {
+            return Carbon::parse($date)->toDateString();
+        } catch (Throwable) {
+            return null;
+        }
     }
 }

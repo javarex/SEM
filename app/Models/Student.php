@@ -12,7 +12,16 @@ class Student extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'first_name',
+        'middle_name',
+        'last_name',
+        'municipality',
+        'type',
+        'exam_score',
+        'pcro_remarks',
+        'fullname',
+    ];
 
     protected function fullname(): Attribute
     {

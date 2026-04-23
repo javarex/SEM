@@ -15,8 +15,10 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        $this->call([
-            StudentSeeder::class,
-        ]);
+        if (app()->environment(['local', 'testing'])) {
+            $this->call([
+                StudentSeeder::class,
+            ]);
+        }
     }
 }

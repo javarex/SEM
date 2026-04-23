@@ -2,78 +2,66 @@
 
 namespace App\Exports;
 
-use Illuminate\Support\Collection;
-use App\Models\Student;
-use App\Traits\HasAverage;
-use Maatwebsite\Excel\Concerns\Exportable;
 use App\Exports\Sheets\StudentCategorySheet;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use App\Models\Student;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class StudentExport implements WithMultipleSheets
 {
-
-    use HasAverage;
-
     use Exportable;
+
     /**
-     * @return Collection
+     * @return array<int, StudentCategorySheet>
      */
-    // public function collection()
-    // {
-    //     return Student::with('scores')
-    //             // ->where('id', 2410)
-    //             // ->limit(10)
-    //             ->get()
-    //             ->map(fn($item) => [
-    //                 'Name' => $item->fullname,
-    //                 'Municipal' => $item->municipality,
-    //                 'Category' => $item->type,
-    //                 // 'Exam_Score' => $item->exam_score,
-    //                 // 'Total' => $item->scores->sum('totalScore'),
-    //                 // 'Average' => $item->scores->average('totalScore'),
-    //                 // 'id' => $item->id,
-    //                 'pcro_remarks' => $item->pcro_remarks,
-    //                 'Panel_Remarks' => $item->scores->map(fn($row, $key) => ['remarks' => $row->remarks ? "- ".str_replace("\n",'',$row->remarks)."\n": ''])->implode('remarks'),
-    //                 'Exam_Score' => ($item->exam_score * 0.5),
-    //                 'Total' => $item->scores->average('totalScore') * 0.5,
-    //                 'total_average' => ($item->exam_score*0.5) + ($item->scores->average('totalScore') * 0.5),
-    //             ]);
-    //     // return Student::select('fullname')->get();
-    // }
     public function sheets(): array
     {
-            $sheets =Student::with('scores')
-                        // ->where('id', 2410)
-                        // ->limit(10)
-                        // ->whereNot('type', '')
-                        ->get()
-                        ->groupBy('type')
-                        // ->dd()
-                        ->map(function($row, $key) {
-                            if (!$key) {
-                                $key = 'others';
-                            }
-                            $data = $row->map(fn($item) => [
-                                'Name' => $item->fullname,
-                                'Municipal' => $item->municipality,
-                                'Category' => $item->type,
-                                // 'Exam_Score' => $item->exam_score,
-                                // 'Total' => $item->scores->sum('totalScore'),
-                                // 'Average' => $item->scores->average('totalScore'),
-                                // 'id' => $item->id,
-                                'pcro_remarks' => $item->pcro_remarks,
-                                'Panel_Remarks' => $item->scores->map(fn($row, $key) => ['remarks' => $row->remarks ? "- ".str_replace("\n",'',$row->remarks)."\n": ''])->implode('remarks'),
-                                'Exam_Score' => ($item->exam_score * 0.5),
-                                'Total' => $item->scores->average('totalScore') * 0.5,
-                                'total_average' => ($item->exam_score*0.5) + ($item->scores->average('totalScore') * 0.5) == 0 ? '0' : ($item->exam_score*0.5) + ($item->scores->average('totalScore') * 0.5),
-                            ]);
-                            return new StudentCategorySheet($data, $key);
-                        });
+        return Student::query()
+            ->with('scores')
+            ->get()
+            ->groupBy(fn (Student $student): string => $student->type ?: 'others')
+            ->map(function (Collection $students, string $key): StudentCategorySheet {
+                $data = $students->map(function (Student $student): array {
+                    $panelScore = (float) ($student->scores->average('totalScore') ?? 0) * 0.5;
+                    $examScore = (float) ($student->exam_score ?? 0) * 0.5;
+                    $totalAverage = $examScore + $panelScore;
 
-        return $sheets->toArray();
+                    return [
+                        'Name' => $this->safeSpreadsheetText($student->fullname),
+                        'Municipal' => $this->safeSpreadsheetText($student->municipality),
+                        'Category' => $this->safeSpreadsheetText($student->type),
+                        'pcro_remarks' => $this->safeSpreadsheetText($student->pcro_remarks),
+                        'Panel_Remarks' => $this->safeSpreadsheetText(
+                            $student->scores
+                                ->map(fn ($score): ?string => $score->remarks ? '- '.str_replace("\n", '', $score->remarks) : null)
+                                ->filter()
+                                ->implode("\n")
+                        ),
+                        'Exam_Score' => $examScore,
+                        'Total' => $panelScore,
+                        'total_average' => $totalAverage === 0.0 ? '0' : $totalAverage,
+                    ];
+                });
+
+                return new StudentCategorySheet($data, $key);
+            })
+            ->values()
+            ->all();
     }
-    
+
+    private function safeSpreadsheetText(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmedValue = ltrim($value);
+
+        if ($trimmedValue !== '' && in_array($trimmedValue[0], ['=', '+', '-', '@'], true)) {
+            return "'{$value}";
+        }
+
+        return $value;
+    }
 }

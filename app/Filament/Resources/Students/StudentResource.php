@@ -154,8 +154,6 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                //                Tables\Columns\TextColumn::make('total1')
-                //                    ->default(fn($record) => dd($record->scores)),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -189,7 +187,8 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->exporter(StudentExporter::class)
                     ->color('success')
                     ->icon('heroicon-s-arrow-right-start-on-rectangle')
-                    ->label('Export Results'),
+                    ->label('Export Results')
+                    ->visible(fn (): bool => auth()->user()?->hasRole('super_admin') ?? false),
             ])
             ->recordActions([
                 ViewAction::make()
@@ -223,6 +222,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
                                             //                            ->mask('999')
                                             ->numeric()
+                                            ->minValue(0)
                                             ->maxValue(15)
                                             ->required(),
                                         TextInput::make('intelligence')
@@ -230,12 +230,14 @@ class StudentResource extends Resource implements HasShieldPermissions
                                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
                                             //                            ->mask('999')
                                             ->numeric()
+                                            ->minValue(0)
                                             ->maxValue(15)
                                             ->required(),
                                         TextInput::make('socio_economic')
                                             ->label('Socio-Economic Form')
                                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">20%</span>'))
                                             ->numeric()
+                                            ->minValue(0)
                                             ->maxValue(20)
                                             ->required(),
                                         Textarea::make('remarks')
@@ -245,14 +247,10 @@ class StudentResource extends Resource implements HasShieldPermissions
                             ])
                             ->columnSpanFull(),
                     ])
-                    ->modalSubmitAction(function (Action $action, $record) {
-                        // dd();
-
-                        // ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d') && $record->score?->created_at !== null)
-
-                    })
                     ->action(function (Student $record, array $data): void {
-                        throw_unless(auth()->user()->can('score', $record), ValidationException::withMessages([
+                        $user = auth()->user();
+
+                        throw_unless($user?->can('score', $record), ValidationException::withMessages([
                             'score' => 'This student score can no longer be edited.',
                         ]));
 
@@ -270,12 +268,12 @@ class StudentResource extends Resource implements HasShieldPermissions
                                 ->first();
 
                             if ($score === null) {
-                                auth()->user()->studentScores()->create([
+                                $user->studentScores()->create([
                                     ...$scoreData,
                                     'student_id' => $record->id,
                                 ]);
                             } else {
-                                throw_unless($score->isEditableBy(auth()->user()), ValidationException::withMessages([
+                                throw_unless($score->isEditableBy($user), ValidationException::withMessages([
                                     'score' => 'This student score can no longer be edited.',
                                 ]));
 
@@ -304,10 +302,11 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->closeModalByEscaping(false)
                     ->modalWidth('6xl')
                     ->modalHeading(fn ($record) => $record?->fullname)
-                    ->visible(fn (Student $record): bool => auth()->user()->can('score', $record)),
+                    ->visible(fn (Student $record): bool => auth()->user()?->can('score', $record) ?? false),
                 EditAction::make()
-                    ->visible(fn (Student $record): bool => auth()->user()->can('update', $record)),
-                DeleteAction::make(),
+                    ->visible(fn (Student $record): bool => auth()->user()?->can('update', $record) ?? false),
+                DeleteAction::make()
+                    ->visible(fn (Student $record): bool => auth()->user()?->can('delete', $record) ?? false),
             ]);
     }
 

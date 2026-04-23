@@ -19,7 +19,14 @@ class StudentScore extends Model
         'remarks',
     ];
 
-    protected $guarded = [];
+    protected $fillable = [
+        'student_id',
+        'user_id',
+        'emotional',
+        'intelligence',
+        'socio_economic',
+        'remarks',
+    ];
 
     /**
      * @return array<int, string>
@@ -32,7 +39,8 @@ class StudentScore extends Model
     public function isEditableBy(Authenticatable $user): bool
     {
         return (string) $this->user_id === (string) $user->getAuthIdentifier()
-            && ($this->created_at === null || $this->created_at->isToday());
+            && $this->created_at !== null
+            && $this->created_at->isToday();
     }
 
     protected function totalScore(): Attribute

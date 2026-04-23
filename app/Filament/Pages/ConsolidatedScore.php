@@ -85,6 +85,5 @@ class ConsolidatedScore extends Page
         }
 
         $this->scores = array_values($formattedStudents);
-        //        dd($this->scores);
     }
 }

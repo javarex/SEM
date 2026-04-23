@@ -2,32 +2,27 @@
 
 namespace App\Exports\Sheets;
 
-use Throwable;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class StudentCategorySheet implements FromCollection, WithHeadings, WithTitle, WithStyles
+class StudentCategorySheet implements FromCollection, WithHeadings, WithStyles, WithTitle
 {
-    
     /**
-     * @return Collection
+     * @param  Collection<int, array<string, mixed>>  $collection
      */
-    protected $collection;
-    protected $key;
+    public function __construct(
+        protected Collection $collection,
+        protected string $key,
+    ) {}
 
-    public function __construct(Collection $collection, $key)
-    {
-        $this->collection = $collection;
-        // dump($key);
-        $this->key = $key;
-    }
-
-    public function collection()
+    /**
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function collection(): Collection
     {
         return $this->collection;
     }
@@ -49,23 +44,18 @@ class StudentCategorySheet implements FromCollection, WithHeadings, WithTitle, W
         ];
     }
 
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
         return [
-            // Style the first row as bold text.
-            1    => ['font' => ['bold' => true]]
+            1 => ['font' => ['bold' => true]],
         ];
     }
 
-
     public function title(): string
     {
-        // dd($this->key);
-        try {
-            return "{$this->key}";
-            //code...
-        } catch (Throwable $th) {
-            dd($this->key);
-        }
+        return str($this->key ?: 'others')
+            ->replace(['\\', '/', '?', '*', '[', ']', ':'], '-')
+            ->limit(31, '')
+            ->toString();
     }
 }

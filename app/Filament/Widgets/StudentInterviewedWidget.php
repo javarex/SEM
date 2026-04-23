@@ -25,13 +25,15 @@ class StudentInterviewedWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $data = StudentScore::get();
+        $overallInterviewed = StudentScore::query()
+            ->whereNotNull('created_at')
+            ->distinct('student_id')
+            ->count('student_id');
 
-        // dd($data->countBy('date'));
         return [
             Stat::make('Total Students', Student::count())
                 ->color('info'),
-            Stat::make('Overall Interviewed', $data->groupBy('student_id')->count())
+            Stat::make('Overall Interviewed', $overallInterviewed)
                 ->color('success')
                 ->extraAttributes([
                     'class' => 'bg-blue-500 text-white',
