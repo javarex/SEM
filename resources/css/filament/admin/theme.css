@@ -7,3 +7,302 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+
+.fi-simple-main:has(.sem-login-page) {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+}
+
+.sem-login-page {
+    min-height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 12% 12%, rgb(250 204 21 / 22%), transparent 32rem),
+        radial-gradient(circle at 86% 18%, rgb(14 165 233 / 16%), transparent 28rem),
+        linear-gradient(135deg, #fbfaf5 0%, #eef4f1 48%, #f8fafc 100%);
+}
+
+.dark .sem-login-page {
+    background:
+        radial-gradient(circle at 14% 14%, rgb(250 204 21 / 12%), transparent 32rem),
+        radial-gradient(circle at 86% 18%, rgb(14 165 233 / 14%), transparent 28rem),
+        linear-gradient(135deg, #0f172a 0%, #111827 52%, #1f2937 100%);
+}
+
+.sem-login-page .fi-simple-page-content {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+}
+
+.sem-login-shell {
+    position: relative;
+    display: grid;
+    min-height: 100vh;
+    grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 29rem);
+    align-items: center;
+    gap: clamp(2rem, 6vw, 5.5rem);
+    padding: clamp(1.5rem, 5vw, 5rem);
+    animation: sem-login-fade-in 640ms ease-out both;
+}
+
+.sem-login-orb {
+    position: absolute;
+    z-index: 0;
+    border-radius: 9999px;
+    filter: blur(10px);
+    opacity: 0.52;
+    pointer-events: none;
+    animation: sem-login-float 18s ease-in-out infinite alternate;
+}
+
+.sem-login-orb-one {
+    top: 13%;
+    left: 7%;
+    height: 12rem;
+    width: 12rem;
+    background: rgb(250 204 21 / 34%);
+}
+
+.sem-login-orb-two {
+    right: 10%;
+    bottom: 11%;
+    height: 15rem;
+    width: 15rem;
+    background: rgb(20 184 166 / 18%);
+    animation-duration: 22s;
+}
+
+.sem-login-hero,
+.sem-login-card {
+    position: relative;
+    z-index: 1;
+}
+
+.sem-login-hero {
+    display: flex;
+    max-width: 44rem;
+    flex-direction: column;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    color: #152019;
+}
+
+.dark .sem-login-hero {
+    color: #f8fafc;
+}
+
+.sem-login-eyebrow,
+.sem-login-kicker,
+.sem-login-card-header p {
+    width: fit-content;
+    border: 1px solid rgb(21 32 25 / 10%);
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 58%);
+    color: #56635a;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    padding: 0.6rem 0.85rem;
+    text-transform: uppercase;
+}
+
+.dark .sem-login-eyebrow,
+.dark .sem-login-kicker,
+.dark .sem-login-card-header p {
+    border-color: rgb(255 255 255 / 14%);
+    background: rgb(255 255 255 / 8%);
+    color: #cbd5e1;
+}
+
+.sem-login-copy {
+    display: grid;
+    gap: 1.35rem;
+}
+
+.sem-login-copy h1 {
+    max-width: 42rem;
+    color: inherit;
+    font-size: clamp(2.4rem, 6vw, 5.6rem);
+    font-weight: 800;
+    letter-spacing: -0.07em;
+    line-height: 0.94;
+}
+
+.sem-login-copy p:not(.sem-login-kicker) {
+    max-width: 34rem;
+    color: #526158;
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    line-height: 1.8;
+}
+
+.dark .sem-login-copy p:not(.sem-login-kicker) {
+    color: #cbd5e1;
+}
+
+.sem-login-highlights {
+    display: grid;
+    max-width: 42rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.sem-login-highlights div {
+    border: 1px solid rgb(21 32 25 / 10%);
+    border-radius: 1.25rem;
+    background: rgb(255 255 255 / 54%);
+    box-shadow: 0 1rem 2.5rem rgb(15 23 42 / 7%);
+    color: #27352c;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 1rem;
+}
+
+.dark .sem-login-highlights div {
+    border-color: rgb(255 255 255 / 12%);
+    background: rgb(255 255 255 / 8%);
+    color: #e2e8f0;
+}
+
+.sem-login-highlights span {
+    display: block;
+    color: #8a6f08;
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+.dark .sem-login-highlights span {
+    color: #fde68a;
+}
+
+.sem-login-card {
+    border: 1px solid rgb(255 255 255 / 72%);
+    border-radius: 2rem;
+    background: rgb(255 255 255 / 78%);
+    box-shadow: 0 1.5rem 4rem rgb(15 23 42 / 16%);
+    padding: clamp(1.5rem, 4vw, 2.4rem);
+    backdrop-filter: blur(22px);
+    animation: sem-login-slide-up 700ms ease-out 120ms both;
+}
+
+.dark .sem-login-card {
+    border-color: rgb(255 255 255 / 12%);
+    background: rgb(15 23 42 / 76%);
+    box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 34%);
+}
+
+.sem-login-card-header {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.sem-login-card-header h2 {
+    color: #16241b;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    line-height: 1;
+}
+
+.dark .sem-login-card-header h2 {
+    color: #f8fafc;
+}
+
+.sem-login-card-header span {
+    color: #5b665f;
+    line-height: 1.7;
+}
+
+.dark .sem-login-card-header span {
+    color: #cbd5e1;
+}
+
+.sem-login-card .fi-fo-component-ctn {
+    gap: 1rem;
+}
+
+.sem-login-card .fi-btn,
+.sem-login-card button[type='submit'] {
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        filter 180ms ease;
+}
+
+.sem-login-card .fi-btn:hover,
+.sem-login-card button[type='submit']:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.9rem 1.8rem rgb(161 98 7 / 20%);
+    filter: saturate(1.06);
+}
+
+.sem-login-card .fi-btn:focus-visible,
+.sem-login-card button[type='submit']:focus-visible {
+    outline: 3px solid rgb(250 204 21 / 44%);
+    outline-offset: 3px;
+}
+
+@keyframes sem-login-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes sem-login-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(1.2rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sem-login-float {
+    from {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    to {
+        transform: translate3d(1.5rem, -1rem, 0) scale(1.04);
+    }
+}
+
+@media (max-width: 900px) {
+    .sem-login-shell {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 1.25rem;
+    }
+
+    .sem-login-hero {
+        padding-top: 2rem;
+    }
+
+    .sem-login-highlights {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sem-login-shell,
+    .sem-login-card,
+    .sem-login-orb {
+        animation: none;
+    }
+
+    .sem-login-card .fi-btn,
+    .sem-login-card button[type='submit'] {
+        transition: none;
+    }
+}

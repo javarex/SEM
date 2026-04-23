@@ -2,43 +2,38 @@
 
 namespace App\Filament\Resources\Students;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\ExportAction;
-use Filament\Actions\Action;
-use Throwable;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use App\Filament\Resources\Students\Pages\ListStudents;
+use App\Filament\Exports\StudentExporter;
+use App\Filament\Pages\ConsolidatedScore;
 use App\Filament\Resources\Students\Pages\CreateStudent;
 use App\Filament\Resources\Students\Pages\EditStudent;
-use Filament\Forms;
-use Filament\Tables;
-use Livewire\Livewire;
+use App\Filament\Resources\Students\Pages\ListStudents;
 use App\Models\Student;
-use Filament\Tables\Table;
-use Filament\Support\RawJs;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ExportAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables;
+use Filament\Tables\Columns\ColumnGroup;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Columns\ColumnGroup;
-use App\Filament\Exports\StudentExporter;
-use Filament\Forms\Components\DatePicker;
-use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\StudentResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\StudentResource\RelationManagers;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Filament\Tables\Columns\ToggleColumn;
+use Livewire\Livewire;
+use Throwable;
 
 class StudentResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Student::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Schema $schema): Schema
     {
@@ -66,42 +61,41 @@ class StudentResource extends Resource implements HasShieldPermissions
         return $table
             ->modifyQueryUsing(function ($query) {
                 $query
-                ->when(auth()->user()->isAdmin(), function($query) {
-                    $query->with('scores');
-                })
-                ->when(!auth()->user()->isAdmin(), function($query) {
-                    $query->with(['score' =>  function($query) {
-                        $query->where('user_id', auth()->id());
-                    }]);
-                });
+                    ->when(auth()->user()->isAdmin(), function ($query) {
+                        $query->with('scores');
+                    })
+                    ->when(! auth()->user()->isAdmin(), function ($query) {
+                        $query->with(['score' => function ($query) {
+                            $query->where('user_id', auth()->id());
+                        }]);
+                    });
             })
             ->columns([
                 TextColumn::make('fullname')
                     ->searchable(['first_name',  'last_name'])
-                    ->description(fn($record) => $record->municipality),
+                    ->description(fn ($record) => $record->municipality),
                 TextColumn::make('score.created_at')
                     ->label('Date')
                     ->searchable()
                     ->dateTime('F j, Y')
-                    ->badge(fn($state) => $state?->toDateString() == now()->toDateString()),
+                    ->badge(fn ($state) => $state?->toDateString() == now()->toDateString()),
                 TextColumn::make('type')
                     ->searchable(),
                 // Tables\Columns\TextColumn::make('score.remarks')
                 //     ->label('Remarks')
                 //     ->searchable(),
-//                Tables\Columns\TextColumn::make('total')
-//                    ->default(fn($record) => $record->scores?->firstWhere('user_id', auth()->id())?->totalScore)
-//                ,
-                ColumnGroup::make('Scores',[
+                //                Tables\Columns\TextColumn::make('total')
+                //                    ->default(fn($record) => $record->scores?->firstWhere('user_id', auth()->id())?->totalScore)
+                //                ,
+                ColumnGroup::make('Scores', [
                     TextColumn::make('score.emotional')
                         ->label('Emotional Quotient')
-                        ->formatStateUsing(function($state, $record) {
-                            if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
+                        ->formatStateUsing(function ($state, $record) {
+                            if (ConsolidatedScore::canAccess()) {
                                 return view('filament.custom.student.scores', [
                                     'scores' => $record->scores,
-                                    'column' => 'emotional'
+                                    'column' => 'emotional',
                                 ]);
-                                return 'admin';
                             } else {
                                 return $state;
                             }
@@ -109,25 +103,24 @@ class StudentResource extends Resource implements HasShieldPermissions
                         ->alignCenter(),
                     TextColumn::make('score.intelligence')
                         ->label('Intelligence Quotient')
-                        ->formatStateUsing(function($state, $record) {
-                            if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
+                        ->formatStateUsing(function ($state, $record) {
+                            if (ConsolidatedScore::canAccess()) {
                                 return view('filament.custom.student.scores', [
                                     'scores' => $record->scores,
-                                    'column' => 'intelligence'
+                                    'column' => 'intelligence',
                                 ]);
                             } else {
                                 return $state;
                             }
                         })
                         ->alignCenter(),
-                    ToggleColumn::make('for_interview'),
                     TextColumn::make('score.socio_economic')
                         ->label('Socio-Economic Form')
-                        ->formatStateUsing(function($state, $record) {
-                            if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
+                        ->formatStateUsing(function ($state, $record) {
+                            if (ConsolidatedScore::canAccess()) {
                                 return view('filament.custom.student.scores', [
                                     'scores' => $record->scores,
-                                    'column' => 'socio_economic'
+                                    'column' => 'socio_economic',
                                 ]);
                             } else {
                                 return $state;
@@ -136,11 +129,11 @@ class StudentResource extends Resource implements HasShieldPermissions
                         ->alignCenter(),
                     TextColumn::make('score.totalScore')
                         ->label('Total Score')
-                        ->formatStateUsing(function($state, $record) {
-                            if (auth()->user()->hasAnyRole(['super_admin', 'pswdo'])) {
+                        ->formatStateUsing(function ($state, $record) {
+                            if (ConsolidatedScore::canAccess()) {
                                 return view('filament.custom.student.scores', [
                                     'scores' => $record->scores,
-                                    'column' => 'totalScore'
+                                    'column' => 'totalScore',
                                 ]);
                             } else {
                                 return $state;
@@ -148,14 +141,14 @@ class StudentResource extends Resource implements HasShieldPermissions
                         })
                         ->alignCenter(),
                 ])
-                ->alignCenter(),
+                    ->alignCenter(),
                 TextColumn::make('exam_score'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-//                Tables\Columns\TextColumn::make('total1')
-//                    ->default(fn($record) => dd($record->scores)),
+                //                Tables\Columns\TextColumn::make('total1')
+                //                    ->default(fn($record) => dd($record->scores)),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
@@ -164,27 +157,25 @@ class StudentResource extends Resource implements HasShieldPermissions
             ->recordUrl(null)
             ->filters([
                 Filter::make('date')
-                ->schema([
-                    DatePicker::make('date'),
-                ])
-                ->query(function (Builder $query, array $data): Builder {
-                    return $query
-                        ->when(
-                            $data['date'],
-                            fn (Builder $query, $date): Builder => $query
-                                    ->when(auth()->user()->isAdmin(),function($query) use($date){
-                                        $query->whereHas('scores', fn($query) =>
-                                            $query->whereDate('created_at', $date)
+                    ->schema([
+                        DatePicker::make('date'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['date'],
+                                fn (Builder $query, $date): Builder => $query
+                                    ->when(auth()->user()->isAdmin(), function ($query) use ($date) {
+                                        $query->whereHas('scores', fn ($query) => $query->whereDate('created_at', $date)
                                         );
                                     })
-                                    ->when(!auth()->user()->isAdmin(),function($query) use($date){
-                                        $query->whereHas('score',fn($query) =>
-                                            $query->whereDate('created_at', $date)
+                                    ->when(! auth()->user()->isAdmin(), function ($query) use ($date) {
+                                        $query->whereHas('score', fn ($query) => $query->whereDate('created_at', $date)
                                             ->where('user_id', auth()->id())
                                         );
                                     }),
-                        );
-                })
+                            );
+                    }),
             ])
             ->headerActions([
                 ExportAction::make()
@@ -219,38 +210,37 @@ class StudentResource extends Resource implements HasShieldPermissions
                             ->maxValue(20)
                             ->required(),
                         Textarea::make('remarks')
-                            ->label('Remarks')
+                            ->label('Remarks'),
                     ])
-                    ->modalSubmitAction(function(Action $action, $record) {
+                    ->modalSubmitAction(function (Action $action, $record) {
                         // dd();
-                        $action
-                            // ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d') && $record->score?->created_at !== null)
-                            ;
+
+                        // ->hidden($record->score?->created_at->format('Y-m-d') !== now()->format('Y-m-d') && $record->score?->created_at !== null)
+
                     })
-                    ->action(function($record, $data, $livewire) {
+                    ->action(function ($record, $data, $livewire) {
                         DB::beginTransaction();
 
                         try {
                             $data['student_id'] = $record->id;
                             // dd($record);
-                        // ? $record->score->update($data) : auth()->user()->studentScores()->create($data);;
-                            if (!$record->score) {
+                            // ? $record->score->update($data) : auth()->user()->studentScores()->create($data);;
+                            if (! $record->score) {
                                 auth()->user()->studentScores()->create($data);
                             } else {
-                                $has_score = $record->whereHas('score', fn($query) => $query->where('user_id', auth()->id()))->exists();
+                                $has_score = $record->whereHas('score', fn ($query) => $query->where('user_id', auth()->id()))->exists();
                                 $has_score ? $record->score->update($data) : auth()->user()->studentScores()->create($data);
                             }
                             DB::commit();
                             // Livewire::dispatch('refreshInterviewedStudent');
                         } catch (Throwable $th) {
-                            //throw $th;
+                            // throw $th;
                             DB::rollBack();
                             dd($th->getMessage());
                         }
 
-
                     })
-                    ->fillForm(function($record) {
+                    ->fillForm(function ($record) {
                         try {
                             return $record->scores?->firstWhere('user_id', auth()->id())->toArray();
                         } catch (Throwable $th) {
@@ -260,15 +250,12 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->closeModalByClickingAway(false)
                     ->closeModalByEscaping(false)
                     ->modalWidth('md')
-                    ->modalHeading(fn($record) => $record?->fullname)
-                    ->visible(fn ($record) => auth()->user()->can('score',  $record)),
+                    ->modalHeading(fn ($record) => $record?->fullname)
+                    ->visible(fn ($record) => auth()->user()->can('score', $record)),
                 EditAction::make(),
                 DeleteAction::make(),
-            ])
-            ;
+            ]);
     }
-
-
 
     public static function getRelations(): array
     {
@@ -301,7 +288,7 @@ class StudentResource extends Resource implements HasShieldPermissions
             'delete_any',
             'force_delete',
             'force_delete_any',
-            'score'
+            'score',
         ];
     }
 }

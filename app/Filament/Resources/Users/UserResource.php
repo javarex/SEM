@@ -2,33 +2,27 @@
 
 namespace App\Filament\Resources\Users;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\CheckboxList;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Actions\EditAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
-use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
+use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\User;
-use Filament\Forms;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use STS\FilamentImpersonate\Tables\Actions\Impersonate;
+use STS\FilamentImpersonate\Actions\Impersonate;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Schema $schema): Schema
     {
@@ -42,9 +36,9 @@ class UserResource extends Resource
                     ->required()
                     ->maxLength(255),
                 TextInput::make('password')
-                    ->dehydrated(fn($operation, $state) => $operation === 'create' || ($state !== null && strtolower($operation) === 'edit'))
+                    ->dehydrated(fn ($operation, $state) => $operation === 'create' || ($state !== null && strtolower($operation) === 'edit'))
                     ->password()
-                    ->required(fn($operation) => strtolower($operation) === 'create')
+                    ->required(fn ($operation) => strtolower($operation) === 'create')
                     ->maxLength(255),
                 CheckboxList::make('roles')
                     ->relationship('roles', 'name')
@@ -61,7 +55,7 @@ class UserResource extends Resource
                 TextColumn::make('email')
                     ->searchable(),
                 IconColumn::make('verified_email')
-                    ->default(fn($record) => $record->email_verified_at !== null)
+                    ->default(fn ($record) => $record->email_verified_at !== null)
                     ->boolean(),
                 TextColumn::make('roles.name')
                     ->listWithLineBreaks()
@@ -81,7 +75,7 @@ class UserResource extends Resource
             ->recordActions([
                 EditAction::make(),
                 Impersonate::make()
-                    ->label('Login')
+                    ->label('login'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -1,82 +1,113 @@
 <x-filament-panels::page>
-    <div class="bg-white p-6 shadow-lg rounded-lg"
-         x-data="{
-                students: @entangle('scores'), // Ensure it's an array
-                judges: @js($judges),
-                perPage: 20,
-                currentPage: 1,
-                paginatedStudents() {
-                    let start = (this.currentPage - 1) * this.perPage;
-                    let end = start + this.perPage;
-                    return this.students.slice(start, end);
-                },
-                totalPages() {
-                    return Math.ceil(this.students.length / this.perPage);
-                },
-                nextPage() {
-                    if (this.currentPage < this.totalPages()) {
-                        this.currentPage++;
-                    }
-                },
-                prevPage() {
-                    if (this.currentPage > 1) {
-                        this.currentPage--;
-                    }
+    <div
+        class="space-y-6 rounded-lg border border-[#d6b35f] bg-[#fffaf0] p-6 shadow-sm dark:border-[#8a6a2f] dark:bg-[#24180f]"
+        x-data="{
+            students: @entangle('scores'),
+            judges: @js($judges),
+            perPage: 20,
+            currentPage: 1,
+            paginatedStudents() {
+                return this.students.slice((this.currentPage - 1) * this.perPage, this.currentPage * this.perPage);
+            },
+            totalPages() {
+                return Math.max(Math.ceil(this.students.length / this.perPage), 1);
+            },
+            scoreFor(student, judge, column) {
+                return student.grades[judge.id]?.[column] ?? 'N/A';
+            },
+            nextPage() {
+                if (this.currentPage < this.totalPages()) {
+                    this.currentPage++;
                 }
-            }"
-    x-init="() => console.log(students)">
-        <h2 class="text-xl font-bold mb-4 text-gray-700">Judging Table</h2>
+            },
+            prevPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                }
+            }
+        }"
+    >
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p class="text-sm font-semibold uppercase text-[#8a5a12] dark:text-[#f3c95f]">Consolidated Score</p>
+                <h2 class="text-2xl font-bold text-[#3f2615] dark:text-[#fff3cf]">Judging Table</h2>
+            </div>
 
-        <table class="w-full border-collapse border border-gray-300">
-            <thead>
-            <tr class="bg-gray-200">
-                <th class="border border-gray-300 px-4 py-2">Student Name</th>
-                <template x-for="(judge, index) in judges" :key="index">
-                    <th class="border border-gray-300 px-4 py-2 text-center" colspan="3" x-text="judge.name"></th>
-                </template>
-                <th class="border border-gray-300 px-4 py-2" colspan="2"></th>
-            </tr>
-            <tr class="bg-gray-200">
-                    <th></th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Emotional</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Intelligence</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Socio-Economic</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Emotional</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Intelligence</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Socio-Economic</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Total Avg</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">Rank</th>
-            </tr>
-            </thead>
-            <tbody>
-            <template x-for="student in paginatedStudents()" :key="student.name">
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2" x-text="student.name"></td>
+            <div class="rounded-lg border border-[#d6b35f] bg-white px-4 py-3 text-sm text-[#5d3a1a] shadow-sm dark:border-[#8a6a2f] dark:bg-[#2f2015] dark:text-[#f5d889]">
+                <span class="font-semibold" x-text="students.length"></span>
+                ranked students
+            </div>
+        </div>
 
-                    <!-- Instead of wrapping inside <template>, use x-for directly on <td> -->
-                    <template x-for="(scores, judge) in student.grades"
-                              :key="'judge-' + judge"
-                              >
-                        <template x-for="grade in scores">
-
-                            <td class="border border-gray-300 px-4 py-2" x-text="grade"></td>
+        <div class="overflow-x-auto rounded-lg border border-[#d6b35f] bg-white shadow-sm dark:border-[#8a6a2f] dark:bg-[#2f2015]">
+            <table class="min-w-full border-collapse text-sm">
+                <thead>
+                    <tr class="bg-[#6f451c] text-[#fff7dc]">
+                        <th class="sticky left-0 z-20 border-r border-[#d6b35f] bg-[#6f451c] px-4 py-3 text-left font-semibold">
+                            Student Name
+                        </th>
+                        <template x-for="judge in judges" :key="judge.id">
+                            <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold" colspan="3" x-text="judge.name"></th>
                         </template>
-{{--                        <td class="border border-gray-300 px-4 py-2" x-text="scores.intelligence ?? 'N/A'"></td>--}}
-{{--                        <td class="border border-gray-300 px-4 py-2" x-text="scores.socio_economic ?? 'N/A'"></td>--}}
-                    </template>
-                    <td class="border font-bold border-gray-300 px-4 py-2" x-text="student.averageScore"></td>
-                    <td class="border font-bold border-gray-300 px-4 py-2" x-text="student.rank"></td>
-                </tr>
-            </template>
-            </tbody>
-        </table>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Total Avg</th>
+                        <th class="px-4 py-3 text-center font-semibold">Rank</th>
+                    </tr>
+                    <tr class="bg-[#f2d27a] text-[#3f2615] dark:bg-[#8a6a2f] dark:text-[#fff3cf]">
+                        <th class="sticky left-0 z-20 border-r border-[#d6b35f] bg-[#f2d27a] px-4 py-3 text-left font-semibold dark:bg-[#8a6a2f]">
+                            Criteria
+                        </th>
+                        <template x-for="judge in judges" :key="`criteria-${judge.id}`">
+                            <template x-for="column in ['Emotional', 'Intelligence', 'Socio-Economic']" :key="`${judge.id}-${column}`">
+                                <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold" x-text="column"></th>
+                            </template>
+                        </template>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Average</th>
+                        <th class="px-4 py-3 text-center font-semibold">Place</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#ead8a4] dark:divide-[#6f552a]">
+                    <template x-for="student in paginatedStudents()" :key="student.name">
+                        <tr class="text-[#3f2615] even:bg-[#fff7df] hover:bg-[#f8e7b6] dark:text-[#fff3cf] dark:even:bg-[#352316] dark:hover:bg-[#44301d]">
+                            <td class="sticky left-0 z-10 border-r border-[#ead8a4] bg-inherit px-4 py-3 font-semibold">
+                                <span x-text="student.name"></span>
+                            </td>
 
-        <!-- Pagination Controls -->
-        <div class="mt-4 flex justify-between">
-            <button @click="prevPage()" :disabled="currentPage === 1" class="bg-gray-300 px-4 py-2 rounded disabled:opacity-50">Previous</button>
-            <span class="text-gray-700">Page <span x-text="currentPage"></span> of <span x-text="totalPages()"></span></span>
-            <button @click="nextPage()" :disabled="currentPage === totalPages()" class="bg-gray-300 px-4 py-2 rounded disabled:opacity-50">Next</button>
+                            <template x-for="judge in judges" :key="`score-${student.name}-${judge.id}`">
+                                <template x-for="column in ['emotional', 'intelligence', 'socio_economic']" :key="`${student.name}-${judge.id}-${column}`">
+                                    <td class="border-r border-[#ead8a4] px-4 py-3 text-center" x-text="scoreFor(student, judge, column)"></td>
+                                </template>
+                            </template>
+
+                            <td class="border-r border-[#ead8a4] px-4 py-3 text-center font-bold text-[#7a4b14] dark:text-[#f3c95f]" x-text="Number(student.averageScore).toFixed(2)"></td>
+                            <td class="px-4 py-3 text-center font-bold text-[#7a4b14] dark:text-[#f3c95f]" x-text="student.rank"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-col gap-3 text-sm text-[#5d3a1a] sm:flex-row sm:items-center sm:justify-between dark:text-[#f5d889]">
+            <button
+                class="rounded-lg border border-[#b78b2e] bg-[#7a4b14] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#f3c95f]"
+                type="button"
+                @click="prevPage()"
+                :disabled="currentPage === 1"
+            >
+                Previous
+            </button>
+
+            <span class="text-center font-semibold">
+                Page <span x-text="currentPage"></span> of <span x-text="totalPages()"></span>
+            </span>
+
+            <button
+                class="rounded-lg border border-[#b78b2e] bg-[#7a4b14] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#f3c95f]"
+                type="button"
+                @click="nextPage()"
+                :disabled="currentPage === totalPages()"
+            >
+                Next
+            </button>
         </div>
     </div>
-
 </x-filament-panels::page>
