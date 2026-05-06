@@ -74,15 +74,6 @@ class StudentPolicy
 
     public function score(AuthUser $authUser, Student $student): bool
     {
-        if (! $authUser->can('Score:Student')) {
-            return false;
-        }
-
-        $score = $student->scores()
-            ->where('user_id', $authUser->getAuthIdentifier())
-            ->latest('id')
-            ->first();
-
-        return $score === null || $score->isEditableBy($authUser);
+        return $authUser->can('Score:Student');
     }
 }

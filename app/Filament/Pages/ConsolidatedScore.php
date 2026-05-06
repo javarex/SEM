@@ -37,12 +37,12 @@ class ConsolidatedScore extends Page
         // Fetch students with their scores and compute averages
         $students = Student::leftJoin('student_scores', 'students.id', '=', 'student_scores.student_id')
             ->leftJoin('users as judges', 'student_scores.user_id', '=', 'judges.id')
-            ->selectRaw('students.id as student_id, students.first_name as student_name,
+            ->selectRaw('students.id as student_id, students.fullname as student_name,
                 judges.id as judge_id, judges.name as judge_name,
                 AVG(student_scores.emotional) as avg_emotional,
                 AVG(student_scores.intelligence) as avg_intelligence,
                 AVG(student_scores.socio_economic) as avg_socio_economic')
-            ->groupBy('students.id', 'students.first_name', 'judges.id', 'judges.name')
+            ->groupBy('students.id', 'students.fullname', 'judges.id', 'judges.name')
             //            ->limit(20)
             ->get();
 

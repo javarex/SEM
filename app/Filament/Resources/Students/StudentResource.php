@@ -46,20 +46,36 @@ class StudentResource extends Resource implements HasShieldPermissions
     {
         return $schema
             ->components([
-                TextInput::make('first_name')
+                TextInput::make('fullname')
+                    ->label('Full Name')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('middle_name')
+                TextInput::make('sex')
                     ->maxLength(255),
-                TextInput::make('last_name')
-                    ->required()
+                TextInput::make('purok')
+                    ->maxLength(255),
+                TextInput::make('barangay')
                     ->maxLength(255),
                 TextInput::make('municipality')
                     ->maxLength(255),
+                TextInput::make('school')
+                    ->maxLength(255),
+                TextInput::make('family_background')
+                    ->maxLength(255),
+                TextInput::make('category')
+                    ->maxLength(255),
+                TextInput::make('ethnicity')
+                    ->maxLength(255),
                 TextInput::make('type')
                     ->maxLength(255),
+                TextInput::make('ranking')
+                    ->maxLength(255),
+                TextInput::make('exam_score')
+                    ->numeric(),
                 Textarea::make('pcro_remarks')
                     ->maxLength(255),
+                Textarea::make('cao_remarks'),
+                Textarea::make('ydd_remarks'),
             ]);
     }
 
@@ -79,8 +95,8 @@ class StudentResource extends Resource implements HasShieldPermissions
             })
             ->columns([
                 TextColumn::make('fullname')
-                    ->searchable(['first_name',  'last_name'])
-                    ->description(fn ($record) => $record->municipality),
+                    ->searchable()
+                    ->description(fn ($record) => collect([$record->barangay, $record->municipality])->filter()->implode(', ')),
                 TextColumn::make('score.created_at')
                     ->label('Date')
                     ->searchable()
@@ -88,6 +104,15 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->badge(fn ($state) => $state?->toDateString() == now()->toDateString()),
                 TextColumn::make('type')
                     ->searchable(),
+                TextColumn::make('sex')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('barangay')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('category')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 // Tables\Columns\TextColumn::make('score.remarks')
                 //     ->label('Remarks')
                 //     ->searchable(),
