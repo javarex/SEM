@@ -1,4 +1,5 @@
 @php
+    use App\Models\StudentProfileTabSetting;
     use Illuminate\Support\Str;
 
     $attributes = $record->getAttributes();
@@ -103,6 +104,8 @@
             ],
         ],
     ];
+
+    $sections = StudentProfileTabSetting::visibleSectionsFor($sections)->all();
 
     $visibilityControls = [
         'name' => 'Name',
