@@ -3,8 +3,11 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Auth\Register;
+use App\Filament\Pages\DdoLogin\EditAccount;
 use App\Filament\Resources\Students\Pages\ListStudents;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\Actions\Action;
 use Filament\Enums\ThemeMode;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
@@ -24,6 +27,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Javarex\DdoLogin\LoginDdoPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -68,7 +72,17 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
+                LoginDdoPlugin::make(),
                 FilamentShieldPlugin::make(),
+            ])
+            ->login(Login::class)
+            ->registration(Register::class)
+            ->profile(EditAccount::class)
+            ->userMenuItems([
+                'edit-profile' => fn (): Action => Action::make('edit-profile')
+                    ->url(fn (): string => EditAccount::getUrl())
+                    ->label('Edit Account')
+                    ->icon('heroicon-o-pencil-square'),
             ])
             ->authMiddleware([
                 Authenticate::class,

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e1e561108690d8d4618c694e395f9654",
+    "content-hash": "a3521a7e3b908cacd3bf32ef8f96ae6f",
     "packages": [
         {
             "name": "bezhansalleh/filament-plugin-essentials",
@@ -2495,6 +2495,54 @@
                 }
             ],
             "time": "2025-09-14T15:34:49+00:00"
+        },
+        {
+            "name": "javarex/ddo-login",
+            "version": "v5.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/javarex/javarex-filament-login.git",
+                "reference": "619b837e02577fa4a93c5839e0c0afa46e133d6c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/javarex/javarex-filament-login/zipball/619b837e02577fa4a93c5839e0c0afa46e133d6c",
+                "reference": "619b837e02577fa4a93c5839e0c0afa46e133d6c",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.0 || ^5.0",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Javarex\\DdoLogin\\Providers\\LoginDdoServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Javarex\\DdoLogin\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "javarex",
+                    "email": "raymartnayreitanong11@gmail.com"
+                }
+            ],
+            "description": "Custom Login",
+            "support": {
+                "issues": "https://github.com/javarex/javarex-filament-login/issues",
+                "source": "https://github.com/javarex/javarex-filament-login/tree/v5.0.1"
+            },
+            "time": "2026-02-02T07:46:17+00:00"
         },
         {
             "name": "kirschbaum-development/eloquent-power-joins",
@@ -11709,7 +11757,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3"
+        "php": "^8.4"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"

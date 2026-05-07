@@ -7,7 +7,7 @@
         <div class="sem-login-orb sem-login-orb-one" aria-hidden="true"></div>
         <div class="sem-login-orb sem-login-orb-two" aria-hidden="true"></div>
 
-        <section class="sem-login-hero" aria-labelledby="sem-login-title">
+        <section class="sem-login-hero" aria-labelledby="sem-register-title">
             <div class="sem-login-eyebrow">
                 Secure Evaluation Portal
             </div>
@@ -15,48 +15,46 @@
             <div class="sem-login-copy">
                 <p class="sem-login-kicker">{{ $appName }}</p>
 
-                <h1 id="sem-login-title">
-                    Welcome back to a calmer way to manage evaluations.
+                <h1 id="sem-register-title">
+                    Create your account for focused evaluation management.
                 </h1>
 
                 <p>
-                    Sign in to review student records, manage judging workflows, and keep scholarship evaluation data organized in one focused workspace.
+                    Register to access student records, coordinate judging workflows, and keep scholarship evaluation data organized in one workspace.
                 </p>
             </div>
 
             <div class="sem-login-highlights" aria-label="Platform highlights">
                 <div>
                     <span>01</span>
-                    Centralized records
+                    Structured intake
                 </div>
 
                 <div>
                     <span>02</span>
-                    Role-aware access
+                    Secure access
                 </div>
 
                 <div>
                     <span>03</span>
-                    Streamlined scoring
+                    Evaluation ready
                 </div>
             </div>
         </section>
 
-        <section class="sem-login-card" aria-labelledby="sem-login-form-title">
+        <section class="sem-login-card" aria-labelledby="sem-register-form-title">
             <div class="sem-login-card-header">
-                <p>Account access</p>
-                <h2 id="sem-login-form-title">Sign in</h2>
-                <span>Use your assigned username and password to continue.</span>
+                <p>Account setup</p>
+                <h2 id="sem-register-form-title">Create account</h2>
+                <span>Use your assigned details to request access.</span>
             </div>
 
             {{ $this->content }}
 
-            @if (filament()->hasRegistration())
-                <div class="login-register-link">
-                    <span>Don't have an account?</span>
-                    <a href="{{ filament()->getRegistrationUrl() }}" class="login-register-anchor">Sign up</a>
-                </div>
-            @endif
+            <div class="sem-auth-switch">
+                <span>Already have an account?</span>
+                <a href="{{ filament()->getLoginUrl() }}">Sign in</a>
+            </div>
         </section>
     </div>
 </x-filament-panels::page.simple>

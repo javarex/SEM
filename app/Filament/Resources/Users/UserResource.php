@@ -13,7 +13,6 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use STS\FilamentImpersonate\Actions\Impersonate;
@@ -31,8 +30,7 @@ class UserResource extends Resource
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('email')
-                    ->email()
+                TextInput::make('username')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
@@ -53,11 +51,8 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('email')
+                TextColumn::make('username')
                     ->searchable(),
-                IconColumn::make('verified_email')
-                    ->default(fn ($record) => $record->email_verified_at !== null)
-                    ->boolean(),
                 TextColumn::make('roles.name')
                     ->listWithLineBreaks()
                     ->badge(),

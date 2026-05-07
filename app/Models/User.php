@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Traits\HasUserRole;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -27,7 +26,7 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $fillable = [
         'name',
-        'email',
+        'username',
         'password',
     ];
 
@@ -49,7 +48,6 @@ class User extends Authenticatable implements FilamentUser
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

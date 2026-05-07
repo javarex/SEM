@@ -11,6 +11,7 @@
         "eightynine/filament-excel-import": "^4.0",
         "filament/filament": "^4.0",
         "itsgoingd/clockwork": "^5.3",
+        "javarex/ddo-login": "^5.0",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
         "stechstudio/filament-impersonate": "^4.0"
