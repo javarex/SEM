@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use STS\FilamentImpersonate\Actions\Impersonate;
 
 class UserResource extends Resource
@@ -40,7 +41,12 @@ class UserResource extends Resource
                     ->required(fn ($operation) => strtolower($operation) === 'create')
                     ->maxLength(255),
                 CheckboxList::make('roles')
-                    ->relationship('roles', 'name')
+                    ->relationship(
+                        'roles', 
+                        'name',
+                        fn(Builder $query) => $query
+                                                ->when(! auth()->user()->super_admin, fn($q) => $q->whereNot('name', 'super_admin'))
+                    )
                     ->searchable(),
             ]);
     }
@@ -48,6 +54,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn(Builder $query) => $query->when(! auth()->user()->super_admin, fn($q) => $q->whereRelation('roles', 'name', '!=', 'super_admin')))
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
