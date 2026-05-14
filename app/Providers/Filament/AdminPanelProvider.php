@@ -71,6 +71,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->topNavigation(true)
             ->plugins([
                 LoginDdoPlugin::make(),
                 FilamentShieldPlugin::make(),

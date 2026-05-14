@@ -192,6 +192,8 @@ return [
                 'forceDelete',
                 'forceDeleteAny',
                 'score',
+                'viewPanelEvaluation',
+                'deleteScore',
             ],
         ],
         'exclude' => [

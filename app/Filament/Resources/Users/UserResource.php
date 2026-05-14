@@ -10,6 +10,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -35,6 +36,14 @@ class UserResource extends Resource
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
+                Select::make('team')
+                    ->options([
+                        'team_1' => 'Team 1',
+                        'team_2' => 'Team 2',
+                        'team_3' => 'Team 3',
+                    ])
+                    ->nullable()
+                    ->visible(fn (): bool => auth()->user()?->hasRole('super_admin') ?? false),
                 TextInput::make('password')
                     ->dehydrated(fn ($operation, $state) => $operation === 'create' || ($state !== null && strtolower($operation) === 'edit'))
                     ->password()
@@ -42,10 +51,10 @@ class UserResource extends Resource
                     ->maxLength(255),
                 CheckboxList::make('roles')
                     ->relationship(
-                        'roles', 
+                        'roles',
                         'name',
-                        fn(Builder $query) => $query
-                                                ->when(! auth()->user()->super_admin, fn($q) => $q->whereNot('name', 'super_admin'))
+                        fn (Builder $query) => $query
+                            ->when(! auth()->user()->super_admin, fn ($q) => $q->whereNotIn('name', ['super_admin', 'pswdo_admin']))
                     )
                     ->searchable(),
             ]);
@@ -54,7 +63,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => $query->when(! auth()->user()->super_admin, fn($q) => $q->whereRelation('roles', 'name', '!=', 'super_admin')))
+            ->modifyQueryUsing(fn (Builder $query) => $query->when(! auth()->user()->super_admin, fn ($q) => $q->whereRelation('roles', 'name', '!=', 'super_admin')))
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),

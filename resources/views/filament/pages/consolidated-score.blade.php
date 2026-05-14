@@ -3,7 +3,7 @@
         class="space-y-6 rounded-lg border border-[#d6b35f] bg-[#fffaf0] p-6 shadow-sm dark:border-[#8a6a2f] dark:bg-[#24180f]"
         x-data="{
             students: @entangle('scores'),
-            judges: @js($judges),
+            judges: @entangle('judges'),
             perPage: 20,
             currentPage: 1,
             paginatedStudents() {
@@ -14,6 +14,13 @@
             },
             scoreFor(student, judge, column) {
                 return student.grades[judge.id]?.[column] ?? 'N/A';
+            },
+            teamLabel(team) {
+                return {
+                    team_1: 'Team 1',
+                    team_2: 'Team 2',
+                    team_3: 'Team 3',
+                }[team] ?? 'No Team';
             },
             nextPage() {
                 if (this.currentPage < this.totalPages()) {
@@ -33,9 +40,25 @@
                 <h2 class="text-2xl font-bold text-[#3f2615] dark:text-[#fff3cf]">Judging Table</h2>
             </div>
 
-            <div class="rounded-lg border border-[#d6b35f] bg-white px-4 py-3 text-sm text-[#5d3a1a] shadow-sm dark:border-[#8a6a2f] dark:bg-[#2f2015] dark:text-[#f5d889]">
-                <span class="font-semibold" x-text="students.length"></span>
-                ranked students
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <label class="flex flex-col gap-1 text-sm font-semibold text-[#5d3a1a] dark:text-[#f5d889]">
+                    Panelist Team
+                    <select
+                        class="rounded-lg border border-[#d6b35f] bg-white px-3 py-2 text-sm text-[#3f2615] shadow-sm dark:border-[#8a6a2f] dark:bg-[#2f2015] dark:text-[#fff3cf]"
+                        wire:model.live="team"
+                        x-on:change="currentPage = 1"
+                    >
+                        <option value="">All Teams</option>
+                        <option value="team_1">Team 1</option>
+                        <option value="team_2">Team 2</option>
+                        <option value="team_3">Team 3</option>
+                    </select>
+                </label>
+
+                <div class="rounded-lg border border-[#d6b35f] bg-white px-4 py-3 text-sm text-[#5d3a1a] shadow-sm dark:border-[#8a6a2f] dark:bg-[#2f2015] dark:text-[#f5d889]">
+                    <span class="font-semibold" x-text="students.length"></span>
+                    ranked students
+                </div>
             </div>
         </div>
 
@@ -47,9 +70,16 @@
                             Student Name
                         </th>
                         <template x-for="judge in judges" :key="judge.id">
-                            <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold" colspan="3" x-text="judge.name"></th>
+                            <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold" colspan="3">
+                                <span x-text="judge.name"></span>
+                                <span class="block text-xs font-medium opacity-80" x-text="teamLabel(judge.team)"></span>
+                            </th>
                         </template>
-                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Total Avg</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Exam Score</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Panel Total Avg</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Exam Score</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Panel Avg</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Final Average</th>
                         <th class="px-4 py-3 text-center font-semibold">Rank</th>
                     </tr>
                     <tr class="bg-[#f2d27a] text-[#3f2615] dark:bg-[#8a6a2f] dark:text-[#fff3cf]">
@@ -61,7 +91,11 @@
                                 <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold" x-text="column"></th>
                             </template>
                         </template>
-                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Average</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Raw</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Raw Average</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">50%</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">50%</th>
+                        <th class="border-r border-[#d6b35f] px-4 py-3 text-center font-semibold">Combined</th>
                         <th class="px-4 py-3 text-center font-semibold">Place</th>
                     </tr>
                 </thead>
@@ -78,7 +112,11 @@
                                 </template>
                             </template>
 
+                            <td class="border-r border-[#ead8a4] px-4 py-3 text-center font-bold text-[#7a4b14] dark:text-[#f3c95f]" x-text="Number(student.examScore).toFixed(2)"></td>
                             <td class="border-r border-[#ead8a4] px-4 py-3 text-center font-bold text-[#7a4b14] dark:text-[#f3c95f]" x-text="Number(student.averageScore).toFixed(2)"></td>
+                            <td class="border-r border-[#ead8a4] px-4 py-3 text-center font-bold text-[#7a4b14] dark:text-[#f3c95f]" x-text="Number(student.examScoreWeighted).toFixed(2)"></td>
+                            <td class="border-r border-[#ead8a4] px-4 py-3 text-center font-bold text-[#7a4b14] dark:text-[#f3c95f]" x-text="Number(student.panelScoreWeighted).toFixed(2)"></td>
+                            <td class="border-r border-[#ead8a4] px-4 py-3 text-center font-bold text-[#7a4b14] dark:text-[#f3c95f]" x-text="Number(student.finalAverage).toFixed(2)"></td>
                             <td class="px-4 py-3 text-center font-bold text-[#7a4b14] dark:text-[#f3c95f]" x-text="student.rank"></td>
                         </tr>
                     </template>

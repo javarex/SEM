@@ -18,6 +18,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -225,6 +226,18 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->modalContent(fn (Student $record): View => view('filament.resources.students.actions.view-student', [
                         'record' => $record,
                     ])),
+                Action::make('panel_evaluation')
+                    ->label('Panel Evaluation')
+                    ->icon('heroicon-o-document-magnifying-glass')
+                    ->modalHeading(fn (Student $record): string => "Panel Evaluation - {$record->fullname}")
+                    ->modalWidth('6xl')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close')
+                    ->modalContent(fn (Student $record): View => view('filament.resources.students.actions.panel-evaluation', [
+                        'scores' => $record->scores()->with('user')->latest()->get(),
+                        'canDeleteScore' => auth()->user()?->can('deleteScore', $record) ?? false,
+                    ]))
+                    ->visible(fn (Student $record): bool => auth()->user()?->can('viewPanelEvaluation', $record) ?? false),
                 Action::make('score')
                     ->label('Score')
                     ->icon('heroicon-s-star')
@@ -293,6 +306,28 @@ class StudentResource extends Resource implements HasShieldPermissions
                                 ->first();
 
                             if ($score === null) {
+                                Student::query()
+                                    ->whereKey($record->id)
+                                    ->lockForUpdate()
+                                    ->first();
+
+                                $panelistScoreCount = StudentScore::query()
+                                    ->where('student_id', $record->id)
+                                    ->distinct()
+                                    ->count('user_id');
+
+                                if ($panelistScoreCount >= 3) {
+                                    Notification::make()
+                                        ->title('Panelist score limit reached')
+                                        ->body('This student already has scores from 3 panelists.')
+                                        ->danger()
+                                        ->send();
+
+                                    throw ValidationException::withMessages([
+                                        'score' => 'This student already has scores from 3 panelists.',
+                                    ]);
+                                }
+
                                 $user->studentScores()->create([
                                     ...$scoreData,
                                     'student_id' => $record->id,
@@ -367,6 +402,8 @@ class StudentResource extends Resource implements HasShieldPermissions
             'force_delete',
             'force_delete_any',
             'score',
+            'view_panel_evaluation',
+            'delete_score',
         ];
     }
 }

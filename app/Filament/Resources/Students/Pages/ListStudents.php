@@ -11,6 +11,7 @@ use App\Models\User;
 use EightyNine\ExcelImport\ExcelImportAction;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -90,6 +91,22 @@ class ListStudents extends ListRecords
         $this->authorizeSuperAdmin();
 
         return Excel::download(new StudentExport, now().'.xlsx');
+    }
+
+    public function deletePanelistScore(int $scoreId): void
+    {
+        $score = StudentScore::query()
+            ->with('student')
+            ->findOrFail($scoreId);
+
+        abort_unless(auth()->user()?->can('deleteScore', $score->student), 403);
+
+        $score->delete();
+
+        Notification::make()
+            ->title('Panelist score deleted')
+            ->success()
+            ->send();
     }
 
     private function authorizeSuperAdmin(): void

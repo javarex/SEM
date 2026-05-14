@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser
     protected $fillable = [
         'name',
         'username',
+        'team',
         'password',
     ];
 
@@ -62,6 +63,7 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasAnyRole([
             'super_admin',
             'pswdo',
+            'pswdo_admin',
             'panelist',
             'panel_user',
         ]);
@@ -81,8 +83,7 @@ class User extends Authenticatable implements FilamentUser
     public function superAdmin(): Attribute
     {
         return new Attribute(
-            get: fn() => $this->roles->contains('name', 'super_admin')
+            get: fn () => $this->roles->contains('name', 'super_admin')
         );
     }
-    
 }

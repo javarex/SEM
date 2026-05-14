@@ -76,4 +76,14 @@ class StudentPolicy
     {
         return $authUser->can('Score:Student');
     }
+
+    public function viewPanelEvaluation(AuthUser $authUser, Student $student): bool
+    {
+        return $authUser->can('ViewPanelEvaluation:Student');
+    }
+
+    public function deleteScore(AuthUser $authUser, Student $student): bool
+    {
+        return $authUser->can('DeleteScore:Student');
+    }
 }
