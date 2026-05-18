@@ -128,6 +128,6 @@ class ListStudents extends ListRecords
 
     private function authorizeSuperAdmin(): void
     {
-        abort_unless(auth()->user()?->hasRole('super_admin'), 403);
+        abort_unless(auth()->user()?->pswdo_admin, 403);
     }
 }
