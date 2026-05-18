@@ -96,7 +96,7 @@ class StudentResource extends Resource implements HasShieldPermissions
             })
             ->columns([
                 TextColumn::make('fullname')
-                    ->searchable()
+                    ->searchable(['fullname', 'municipality'])
                     ->description(fn ($record) => collect([$record->barangay, $record->municipality])->filter()->implode(', ')),
                 TextColumn::make('score.created_at')
                     ->label('Date')
@@ -122,7 +122,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                 //                ,
                 ColumnGroup::make('Scores', [
                     TextColumn::make('score.emotional')
-                        ->label('Emotional Quotient')
+                        ->label('EQ')
                         ->formatStateUsing(function ($state, $record) {
                             if (ConsolidatedScore::canAccess()) {
                                 return view('filament.custom.student.scores', [
@@ -135,7 +135,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                         })
                         ->alignCenter(),
                     TextColumn::make('score.intelligence')
-                        ->label('Intelligence Quotient')
+                        ->label('IQ')
                         ->formatStateUsing(function ($state, $record) {
                             if (ConsolidatedScore::canAccess()) {
                                 return view('filament.custom.student.scores', [
