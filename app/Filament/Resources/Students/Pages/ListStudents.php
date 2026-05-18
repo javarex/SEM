@@ -11,6 +11,7 @@ use App\Models\User;
 use EightyNine\ExcelImport\ExcelImportAction;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,7 +33,21 @@ class ListStudents extends ListRecords
                 ->use(StudentExamImport::class)
                 ->visible(fn (): bool => auth()->user()?->hasRole('super_admin') ?? false),
             Action::make('export')
-                ->action('export')
+                ->schema([
+                    Select::make('municipality')
+                        ->label('Municipality')
+                        ->options(fn (): array => Student::query()
+                            ->whereNotNull('municipality')
+                            ->where('municipality', '!=', '')
+                            ->distinct()
+                            ->orderBy('municipality')
+                            ->pluck('municipality', 'municipality')
+                            ->prepend('All', 'all')
+                            ->all())
+                        ->searchable()
+                        ->required(),
+                ])
+                ->action(fn (array $data): BinaryFileResponse => $this->export($data['municipality']))
                 ->color('success')
                 ->icon('heroicon-s-arrow-right-start-on-rectangle')
                 ->label('Export Results')
@@ -86,11 +101,13 @@ class ListStudents extends ListRecords
         });
     }
 
-    public function export(): BinaryFileResponse
+    public function export(string $municipality): BinaryFileResponse
     {
         $this->authorizeSuperAdmin();
 
-        return Excel::download(new StudentExport, now().'.xlsx');
+        $filenameMunicipality = str($municipality)->slug()->toString();
+
+        return Excel::download(new StudentExport($municipality), now().'-'.$filenameMunicipality.'.xlsx');
     }
 
     public function deletePanelistScore(int $scoreId): void
