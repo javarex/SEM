@@ -142,8 +142,8 @@ class StudentExamImport implements ToCollection
                     'exam_score' => blank($row[14] ?? null) ? null : $row[14],
                     'pcro_remarks' => null,
                     'fullname' => $this->panelInterviewFullname($row[2] ?? null),
-                    'cao_remarks' => $this->nullableString($row[17] ?? null),
-                    'ydd_remarks' => $this->nullableString($row[18] ?? null),
+                    'cao_remarks' => $this->nullableString($row[18] ?? null),
+                    'ydd_remarks' => $this->nullableString($row[19] ?? null),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
