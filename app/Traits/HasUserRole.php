@@ -10,6 +10,6 @@ trait HasUserRole
 
     public function isAdmin(bool $super = false): bool
     {
-        return $super ? $this->hasRole('super_admin') : $this->hasAnyRole(['super_admin', 'pswdo']);
+        return $super ? $this->hasRole('super_admin') : $this->hasAnyRole(['super_admin', 'pswdo_admin']);
     }
 }

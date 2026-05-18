@@ -51,7 +51,7 @@ class ListStudents extends ListRecords
                 ->color('success')
                 ->icon('heroicon-s-arrow-right-start-on-rectangle')
                 ->label('Export Results')
-                ->visible(fn (): bool => auth()->user()?->hasRole('super_admin') ?? false),
+                ->visible(fn (): bool => auth()->user()?->pswdo_admin ?? false),
             Action::make('generate_scores')
                 ->requiresConfirmation()
                 ->label('Generate Student Scores')

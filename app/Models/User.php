@@ -86,4 +86,11 @@ class User extends Authenticatable implements FilamentUser
             get: fn () => $this->roles->contains('name', 'super_admin')
         );
     }
+
+    public function pswdoAdmin(): Attribute
+    {
+        return new Attribute(
+            get: fn () => $this->hasAnyRole(['super_admin', 'pswdo_admin'])
+        );
+    }
 }
