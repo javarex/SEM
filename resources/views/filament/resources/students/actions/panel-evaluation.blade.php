@@ -18,6 +18,7 @@
                 <th class="px-4 py-3 text-center">Intelligence</th>
                 <th class="px-4 py-3 text-center">Socio-Economic</th>
                 <th class="px-4 py-3 text-center">Total</th>
+                <th class="px-4 py-3 text-center">DQ</th>
                 <th class="px-4 py-3">Remarks</th>
                 <th class="px-4 py-3">Scored At</th>
                 @if ($canDeleteScore)
@@ -34,6 +35,15 @@
                     <td class="px-4 py-3 text-center">{{ $formatScore($score->intelligence) }}</td>
                     <td class="px-4 py-3 text-center">{{ $formatScore($score->socio_economic) }}</td>
                     <td class="px-4 py-3 text-center font-semibold">{{ $formatScore($score->totalScore) }}</td>
+                    <td class="px-4 py-3 text-center">
+                        @if ($score->dq)
+                            <span class="rounded-full bg-danger-100 px-2 py-1 text-xs font-semibold text-danger-700 dark:bg-danger-500/20 dark:text-danger-300">
+                                DQ
+                            </span>
+                        @else
+                            N/A
+                        @endif
+                    </td>
                     <td class="max-w-xs whitespace-pre-line px-4 py-3">{{ filled($score->remarks) ? $score->remarks : 'N/A' }}</td>
                     <td class="px-4 py-3">{{ $score->created_at?->format('M j, Y g:i A') ?? 'N/A' }}</td>
                     @if ($canDeleteScore)
@@ -49,7 +59,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td class="px-4 py-6 text-center text-gray-500 dark:text-gray-400" colspan="{{ $canDeleteScore ? 9 : 8 }}">
+                    <td class="px-4 py-6 text-center text-gray-500 dark:text-gray-400" colspan="{{ $canDeleteScore ? 10 : 9 }}">
                         No panel scores found.
                     </td>
                 </tr>

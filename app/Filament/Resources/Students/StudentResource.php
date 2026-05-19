@@ -15,6 +15,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ExportAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -22,6 +23,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\View as SchemaView;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -186,7 +188,24 @@ class StudentResource extends Resource implements HasShieldPermissions
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->recordUrl(null)
+            ->recordClasses(fn (Student $record): ?string => $record->scores->contains('dq', true) || $record->score?->dq
+                ? 'bg-danger-50 dark:bg-danger-950/40 [&>td]:border-danger-200 dark:[&>td]:border-danger-800'
+                : null)
             ->filters([
+                Filter::make('dq')
+                    ->label('DQ Students')
+                    ->query(function (Builder $query): Builder {
+                        return $query
+                            ->when(auth()->user()->isAdmin(), function (Builder $query): Builder {
+                                return $query->whereHas('scores', fn (Builder $query): Builder => $query->where('dq', true));
+                            })
+                            ->when(! auth()->user()->isAdmin(), function (Builder $query): Builder {
+                                return $query->whereHas('score', fn (Builder $query): Builder => $query
+                                    ->where('user_id', auth()->id())
+                                    ->where('dq', true)
+                                );
+                            });
+                    }),
                 Filter::make('date')
                     ->schema([
                         DatePicker::make('date'),
@@ -255,6 +274,10 @@ class StudentResource extends Resource implements HasShieldPermissions
                                 Section::make('Scoring Panel')
                                     ->description('Enter only the evaluation scores and remarks.')
                                     ->schema([
+                                        Checkbox::make('dq')
+                                            ->label('DQ')
+                                            ->live()
+                                            ->helperText('Tag this student as disqualified for this panel score.'),
                                         TextInput::make('emotional')
                                             ->label('Emotional Quotient')
                                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
@@ -262,7 +285,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                                             ->numeric()
                                             ->minValue(0)
                                             ->maxValue(15)
-                                            ->required(),
+                                            ->required(fn (Get $get): bool => ! (bool) $get('dq')),
                                         TextInput::make('intelligence')
                                             ->label('Intelligence Quotient')
                                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">15%</span>'))
@@ -270,14 +293,14 @@ class StudentResource extends Resource implements HasShieldPermissions
                                             ->numeric()
                                             ->minValue(0)
                                             ->maxValue(15)
-                                            ->required(),
+                                            ->required(fn (Get $get): bool => ! (bool) $get('dq')),
                                         TextInput::make('socio_economic')
                                             ->label('Socio-Economic Form')
                                             ->hint(new HtmlString('<span class="text-lg font-bold dark:text-green-400 text-green-700">20%</span>'))
                                             ->numeric()
                                             ->minValue(0)
                                             ->maxValue(20)
-                                            ->required(),
+                                            ->required(fn (Get $get): bool => ! (bool) $get('dq')),
                                         Textarea::make('remarks')
                                             ->label('Remarks'),
                                     ])
@@ -298,6 +321,12 @@ class StudentResource extends Resource implements HasShieldPermissions
                             $scoreData = collect($data)
                                 ->only(StudentScore::editableFields())
                                 ->all();
+
+                            if ($scoreData['dq'] ?? false) {
+                                $scoreData['emotional'] = blank($scoreData['emotional'] ?? null) ? 0 : $scoreData['emotional'];
+                                $scoreData['intelligence'] = blank($scoreData['intelligence'] ?? null) ? 0 : $scoreData['intelligence'];
+                                $scoreData['socio_economic'] = blank($scoreData['socio_economic'] ?? null) ? 0 : $scoreData['socio_economic'];
+                            }
 
                             $score = StudentScore::query()
                                 ->where('student_id', $record->id)

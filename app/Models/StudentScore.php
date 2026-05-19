@@ -17,6 +17,7 @@ class StudentScore extends Model
         'intelligence',
         'socio_economic',
         'remarks',
+        'dq',
     ];
 
     protected $fillable = [
@@ -26,6 +27,7 @@ class StudentScore extends Model
         'intelligence',
         'socio_economic',
         'remarks',
+        'dq',
     ];
 
     /**
@@ -34,6 +36,16 @@ class StudentScore extends Model
     public static function editableFields(): array
     {
         return self::EDITABLE_FIELDS;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'dq' => 'boolean',
+        ];
     }
 
     public function isEditableBy(Authenticatable $user): bool
