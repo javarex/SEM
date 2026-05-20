@@ -6,6 +6,7 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\User;
+use App\UserTeam;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -37,11 +38,7 @@ class UserResource extends Resource
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
                 Select::make('team')
-                    ->options([
-                        'team_1' => 'Team 1',
-                        'team_2' => 'Team 2',
-                        'team_3' => 'Team 3',
-                    ])
+                    ->options(UserTeam::options())
                     ->nullable()
                     ->visible(fn (): bool => auth()->user()?->hasRole('super_admin') ?? false),
                 TextInput::make('password')
@@ -66,6 +63,8 @@ class UserResource extends Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->when(! auth()->user()->super_admin, fn ($q) => $q->whereRelation('roles', 'name', '!=', 'super_admin')))
             ->columns([
                 TextColumn::make('name')
+                    ->searchable(),
+                TextColumn::make('team')
                     ->searchable(),
                 TextColumn::make('username')
                     ->searchable(),

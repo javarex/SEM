@@ -1,9 +1,14 @@
 <x-filament-panels::page>
+    @php
+        $teamOptions = \App\UserTeam::options();
+    @endphp
+
     <div
         class="space-y-6 rounded-lg border border-[#d6b35f] bg-[#fffaf0] p-6 shadow-sm dark:border-[#8a6a2f] dark:bg-[#24180f]"
         x-data="{
             students: @entangle('scores'),
             judges: @entangle('judges'),
+            teamOptions: @js($teamOptions),
             perPage: 20,
             currentPage: 1,
             paginatedStudents() {
@@ -16,11 +21,7 @@
                 return student.grades[judge.id]?.[column] ?? 'N/A';
             },
             teamLabel(team) {
-                return {
-                    team_1: 'Team 1',
-                    team_2: 'Team 2',
-                    team_3: 'Team 3',
-                }[team] ?? 'No Team';
+                return this.teamOptions[team] ?? 'No Team';
             },
             nextPage() {
                 if (this.currentPage < this.totalPages()) {
@@ -49,9 +50,9 @@
                         x-on:change="currentPage = 1"
                     >
                         <option value="">All Teams</option>
-                        <option value="team_1">Team 1</option>
-                        <option value="team_2">Team 2</option>
-                        <option value="team_3">Team 3</option>
+                        @foreach ($teamOptions as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
                     </select>
                 </label>
 

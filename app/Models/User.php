@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasUserRole;
+use App\UserTeam;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -51,6 +52,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'password' => 'hashed',
+            'team' => UserTeam::class,
         ];
     }
 

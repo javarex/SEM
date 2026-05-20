@@ -44,7 +44,7 @@ class ConsolidatedScore extends Page
             ->map(fn (User $judge): array => [
                 'id' => $judge->id,
                 'name' => $judge->name,
-                'team' => $judge->team,
+                'team' => $judge->team?->value,
             ])
             ->values()
             ->all();

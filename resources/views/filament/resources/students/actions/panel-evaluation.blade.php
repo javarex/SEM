@@ -1,10 +1,4 @@
 @php
-    $teamLabels = [
-        'team_1' => 'Team 1',
-        'team_2' => 'Team 2',
-        'team_3' => 'Team 3',
-    ];
-
     $formatScore = fn (mixed $value): string => $value === null ? 'N/A' : rtrim(rtrim(number_format((float) $value, 2), '0'), '.');
 @endphp
 
@@ -30,7 +24,7 @@
             @forelse ($scores as $score)
                 <tr class="text-gray-700 dark:text-gray-200">
                     <td class="px-4 py-3 font-medium">{{ $score->user?->name ?? 'N/A' }}</td>
-                    <td class="px-4 py-3">{{ $teamLabels[$score->user?->team] ?? 'N/A' }}</td>
+                    <td class="px-4 py-3">{{ $score->user?->team?->getLabel() ?? 'N/A' }}</td>
                     <td class="px-4 py-3 text-center">{{ $formatScore($score->emotional) }}</td>
                     <td class="px-4 py-3 text-center">{{ $formatScore($score->intelligence) }}</td>
                     <td class="px-4 py-3 text-center">{{ $formatScore($score->socio_economic) }}</td>

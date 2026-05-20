@@ -30,6 +30,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\ColumnGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -205,6 +206,46 @@ class StudentResource extends Resource implements HasShieldPermissions
                                     ->where('dq', true)
                                 );
                             });
+                    }),
+                SelectFilter::make('panelist_team_status')
+                    ->label('Panelist Team Status')
+                    ->options([
+                        'valid_same_team' => 'Valid - same team',
+                        'invalid_mixed_team' => 'Invalid - mixed team',
+                        'incomplete_rating' => 'Incomplete rating',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return match ($data['value'] ?? null) {
+                            'valid_same_team' => $query->whereIn('students.id', function ($query): void {
+                                $query
+                                    ->select('student_scores.student_id')
+                                    ->from('student_scores')
+                                    ->join('users', 'users.id', '=', 'student_scores.user_id')
+                                    ->whereNull('student_scores.deleted_at')
+                                    ->groupBy('student_scores.student_id')
+                                    ->havingRaw('COUNT(DISTINCT student_scores.user_id) = 3')
+                                    ->havingRaw('COUNT(DISTINCT users.team) = 1');
+                            }),
+                            'invalid_mixed_team' => $query->whereIn('students.id', function ($query): void {
+                                $query
+                                    ->select('student_scores.student_id')
+                                    ->from('student_scores')
+                                    ->join('users', 'users.id', '=', 'student_scores.user_id')
+                                    ->whereNull('student_scores.deleted_at')
+                                    ->groupBy('student_scores.student_id')
+                                    ->havingRaw('COUNT(DISTINCT student_scores.user_id) = 3')
+                                    ->havingRaw('COUNT(DISTINCT users.team) > 1');
+                            }),
+                            'incomplete_rating' => $query->whereIn('students.id', function ($query): void {
+                                $query
+                                    ->select('student_scores.student_id')
+                                    ->from('student_scores')
+                                    ->whereNull('student_scores.deleted_at')
+                                    ->groupBy('student_scores.student_id')
+                                    ->havingRaw('COUNT(DISTINCT student_scores.user_id) BETWEEN 1 AND 2');
+                            }),
+                            default => $query,
+                        };
                     }),
                 Filter::make('date')
                     ->schema([
