@@ -279,6 +279,25 @@ class StudentResource extends Resource implements HasShieldPermissions
                             ),
                         );
                     }),
+                Filter::make('rated_by_my_team_not_by_me')
+                    ->label('Rated By My Team, Not By Me')
+                    ->visible(fn (): bool => filled(auth()->user()?->team))
+                    ->query(function (Builder $query): Builder {
+                        $user = auth()->user();
+                        $team = $user?->team;
+
+                        if (! $team instanceof UserTeam || $user === null) {
+                            return $query;
+                        }
+
+                        return $query
+                            ->whereHas('scores', fn (Builder $query): Builder => $query
+                                ->whereHas('user', fn (Builder $query): Builder => $query->where('team', $team->value))
+                            )
+                            ->whereDoesntHave('scores', fn (Builder $query): Builder => $query
+                                ->where('user_id', $user->id)
+                            );
+                    }),
                 Filter::make('date')
                     ->schema([
                         DatePicker::make('date'),

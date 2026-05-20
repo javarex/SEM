@@ -72,6 +72,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->topNavigation(true)
+            ->globalSearch(false)
             ->plugins([
                 LoginDdoPlugin::make(),
                 FilamentShieldPlugin::make(),
