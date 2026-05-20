@@ -86,14 +86,26 @@ class StudentResource extends Resource implements HasShieldPermissions
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(function ($query) {
+            ->modifyQueryUsing(function (Builder $query, $livewire): void {
+                $date = data_get($livewire->tableFilters, 'date.date');
+
                 $query
-                    ->when(auth()->user()->isAdmin(), function ($query) {
-                        $query->with('scores');
+                    ->when(auth()->user()->isAdmin(), function (Builder $query) use ($date): void {
+                        $query->with([
+                            'scores',
+                            'score' => fn ($query) => $query
+                                ->when($date, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', $date))
+                                ->latest('created_at')
+                                ->latest('id'),
+                        ]);
                     })
-                    ->when(! auth()->user()->isAdmin(), function ($query) {
-                        $query->with(['score' => function ($query) {
-                            $query->where('user_id', auth()->id());
+                    ->when(! auth()->user()->isAdmin(), function (Builder $query) use ($date): void {
+                        $query->with(['score' => function ($query) use ($date): void {
+                            $query
+                                ->where('user_id', auth()->id())
+                                ->when($date, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', $date))
+                                ->latest('created_at')
+                                ->latest('id');
                         }]);
                     });
             })
