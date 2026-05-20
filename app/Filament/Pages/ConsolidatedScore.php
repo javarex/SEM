@@ -2,41 +2,58 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Student;
 use App\Models\User;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
+use Override;
 
 class ConsolidatedScore extends Page
 {
     use HasPageShield;
+    use WithPagination;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
     protected string $view = 'filament.pages.consolidated-score';
 
-    public $scores;
-
-    public $judges;
-
     public ?string $team = null;
 
-    //    public $scores;
-
-    public function mount(): void
-    {
-        $this->fetchScore();
-    }
+    public int $perPage = 10;
 
     public function updatedTeam(): void
     {
-        $this->fetchScore();
+        $this->resetPage();
     }
 
-    public function fetchScore(): void
+    #[Override]
+    public function getHeading(): string|Htmlable|null
     {
-        // Get only users who scored at least one student.
-        $this->judges = User::query()
+        return null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getViewData(): array
+    {
+        return [
+            'judges' => $this->getJudges(),
+            'students' => $this->getPaginatedStudents(),
+        ];
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, team: ?string}>
+     */
+    protected function getJudges(): array
+    {
+        return User::query()
             ->whereHas('studentScores')
             ->when($this->team, fn ($query, string $team) => $query->where('team', $team))
             ->orderBy('name')
@@ -48,64 +65,104 @@ class ConsolidatedScore extends Page
             ])
             ->values()
             ->all();
+    }
 
-        // Fetch students with their scores and compute averages
-        $students = Student::query()
-            ->join('student_scores', 'students.id', '=', 'student_scores.student_id')
+    protected function getPaginatedStudents(): LengthAwarePaginator
+    {
+        $students = DB::query()
+            ->fromSub($this->studentScoreSummaryQuery(), 'student_score_summary')
+            ->orderByDesc('average_score')
+            ->orderBy('student_name')
+            ->paginate($this->perPage);
+
+        $studentIds = $students->getCollection()
+            ->pluck('student_id')
+            ->all();
+
+        $grades = $this->getGradesForStudents($studentIds);
+        $firstRank = $students->firstItem() ?? 1;
+
+        $students->setCollection(
+            $students->getCollection()
+                ->values()
+                ->map(function ($student, int $index) use ($grades, $firstRank): array {
+                    $averageScore = (float) $student->average_score;
+                    $examScore = (float) ($student->exam_score ?? 0);
+
+                    return [
+                        'id' => (int) $student->student_id,
+                        'name' => $student->student_name,
+                        'examScore' => $examScore,
+                        'grades' => $grades->get((int) $student->student_id, []),
+                        'averageScore' => $averageScore,
+                        'examScoreWeighted' => $examScore * 0.5,
+                        'panelScoreWeighted' => $averageScore * 0.5,
+                        'finalAverage' => ($examScore * 0.5) + ($averageScore * 0.5),
+                        'rank' => $firstRank + $index,
+                    ];
+                })
+        );
+
+        return $students;
+    }
+
+    protected function studentScoreSummaryQuery(): Builder
+    {
+        return DB::query()
+            ->fromSub($this->judgeScoreAveragesQuery(), 'judge_score_averages')
+            ->join('students', 'students.id', '=', 'judge_score_averages.student_id')
+            ->selectRaw('
+                students.id as student_id,
+                students.fullname as student_name,
+                students.exam_score,
+                AVG(judge_score_averages.judge_total) as average_score
+            ')
+            ->groupBy('students.id', 'students.fullname', 'students.exam_score');
+    }
+
+    protected function judgeScoreAveragesQuery(): Builder
+    {
+        return DB::table('student_scores')
             ->join('users as judges', 'student_scores.user_id', '=', 'judges.id')
             ->whereNull('student_scores.deleted_at')
-            ->when($this->team, fn ($query, string $team) => $query->where('judges.team', $team))
-            ->selectRaw('students.id as student_id, students.fullname as student_name, students.exam_score,
-                judges.id as judge_id, judges.name as judge_name,
+            ->when($this->team, fn (Builder $query, string $team): Builder => $query->where('judges.team', $team))
+            ->selectRaw('
+                student_scores.student_id,
+                judges.id as judge_id,
+                judges.name as judge_name,
+                judges.team as judge_team,
                 AVG(student_scores.emotional) as avg_emotional,
                 AVG(student_scores.intelligence) as avg_intelligence,
-                AVG(student_scores.socio_economic) as avg_socio_economic')
-            ->groupBy('students.id', 'students.fullname', 'students.exam_score', 'judges.id', 'judges.name')
-            //            ->limit(20)
-            ->get();
+                AVG(student_scores.socio_economic) as avg_socio_economic,
+                AVG(student_scores.emotional) + AVG(student_scores.intelligence) + AVG(student_scores.socio_economic) as judge_total
+            ')
+            ->groupBy('student_scores.student_id', 'judges.id', 'judges.name', 'judges.team');
+    }
 
-        $formattedStudents = [];
-
-        foreach ($students as $score) {
-            if (! isset($formattedStudents[$score->student_id])) {
-                $formattedStudents[$score->student_id] = [
-                    'name' => $score->student_name,
-                    'examScore' => (float) ($score->exam_score ?? 0),
-                    'grades' => [],
-                    'totalScore' => 0,
-                    'judgeCount' => 0,
-                ];
-            }
-
-            if ($score->judge_id) {
-                $formattedStudents[$score->student_id]['grades'][$score->judge_id] = [
-                    'emotional' => number_format($score->avg_emotional, 2),
-                    'intelligence' => number_format($score->avg_intelligence, 2),
-                    'socio_economic' => number_format($score->avg_socio_economic, 2),
-                ];
-
-                $formattedStudents[$score->student_id]['totalScore'] += $score->avg_emotional + $score->avg_intelligence + $score->avg_socio_economic;
-                $formattedStudents[$score->student_id]['judgeCount']++;
-            }
+    /**
+     * @param  array<int, int>  $studentIds
+     * @return Collection<int, array<int, array{emotional: float, intelligence: float, socio_economic: float}>>
+     */
+    protected function getGradesForStudents(array $studentIds): Collection
+    {
+        if ($studentIds === []) {
+            return collect();
         }
 
-        foreach ($formattedStudents as &$student) {
-            $student['averageScore'] = $student['judgeCount'] > 0 ? $student['totalScore'] / $student['judgeCount'] : 0;
-            $student['examScoreWeighted'] = $student['examScore'] * 0.5;
-            $student['panelScoreWeighted'] = $student['averageScore'] * 0.5;
-            $student['finalAverage'] = $student['examScoreWeighted'] + $student['panelScoreWeighted'];
-        }
-
-        // Sort by average score (highest first)
-        usort($formattedStudents, function ($a, $b) {
-            return $b['averageScore'] <=> $a['averageScore'];
-        });
-
-        // Assign ranks
-        foreach ($formattedStudents as $index => &$student) {
-            $student['rank'] = $index + 1;
-        }
-
-        $this->scores = array_values($formattedStudents);
+        return DB::query()
+            ->fromSub($this->judgeScoreAveragesQuery(), 'judge_score_averages')
+            ->whereIn('student_id', $studentIds)
+            ->orderBy('judge_name')
+            ->get()
+            ->groupBy('student_id')
+            ->map(fn (Collection $studentScores): array => $studentScores
+                ->mapWithKeys(fn ($score): array => [
+                    (int) $score->judge_id => [
+                        'emotional' => (float) $score->avg_emotional,
+                        'intelligence' => (float) $score->avg_intelligence,
+                        'socio_economic' => (float) $score->avg_socio_economic,
+                    ],
+                ])
+                ->all());
     }
 }

@@ -9,6 +9,7 @@ use App\Filament\Resources\Students\Pages\EditStudent;
 use App\Filament\Resources\Students\Pages\ListStudents;
 use App\Models\Student;
 use App\Models\StudentScore;
+use App\UserTeam;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -88,13 +89,18 @@ class StudentResource extends Resource implements HasShieldPermissions
         return $table
             ->modifyQueryUsing(function (Builder $query, $livewire): void {
                 $date = data_get($livewire->tableFilters, 'date.date');
+                $team = data_get($livewire->tableFilters, 'panelist_team.value');
 
                 $query
-                    ->when(auth()->user()->isAdmin(), function (Builder $query) use ($date): void {
+                    ->when(auth()->user()->isAdmin(), function (Builder $query) use ($date, $team): void {
                         $query->with([
-                            'scores',
+                            'scores' => fn ($query) => $query
+                                ->with('user')
+                                ->when($date, fn ($query, string $date) => $query->whereDate('created_at', $date))
+                                ->when($team, fn ($query, string $team) => $query->whereHas('user', fn (Builder $query): Builder => $query->where('team', $team))),
                             'score' => fn ($query) => $query
-                                ->when($date, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', $date))
+                                ->when($date, fn ($query, string $date) => $query->whereDate('created_at', $date))
+                                ->when($team, fn ($query, string $team) => $query->whereHas('user', fn (Builder $query): Builder => $query->where('team', $team)))
                                 ->latest('created_at')
                                 ->latest('id'),
                         ]);
@@ -103,7 +109,7 @@ class StudentResource extends Resource implements HasShieldPermissions
                         $query->with(['score' => function ($query) use ($date): void {
                             $query
                                 ->where('user_id', auth()->id())
-                                ->when($date, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', $date))
+                                ->when($date, fn ($query, string $date) => $query->whereDate('created_at', $date))
                                 ->latest('created_at')
                                 ->latest('id');
                         }]);
@@ -259,17 +265,35 @@ class StudentResource extends Resource implements HasShieldPermissions
                             default => $query,
                         };
                     }),
+                SelectFilter::make('panelist_team')
+                    ->label('Panelist Team')
+                    ->options(UserTeam::options())
+                    ->query(function (Builder $query, array $data, $livewire): Builder {
+                        $date = data_get($livewire->tableFilters, 'date.date');
+
+                        return $query->when(
+                            $data['value'] ?? null,
+                            fn (Builder $query, string $team): Builder => $query->whereHas('scores', fn (Builder $query): Builder => $query
+                                ->whereHas('user', fn (Builder $query): Builder => $query->where('team', $team))
+                                ->when($date, fn (Builder $query, string $date): Builder => $query->whereDate('created_at', $date))
+                            ),
+                        );
+                    }),
                 Filter::make('date')
                     ->schema([
                         DatePicker::make('date'),
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
+                    ->query(function (Builder $query, array $data, $livewire): Builder {
+                        $team = data_get($livewire->tableFilters, 'panelist_team.value');
+
                         return $query
                             ->when(
                                 $data['date'],
                                 fn (Builder $query, $date): Builder => $query
-                                    ->when(auth()->user()->isAdmin(), function ($query) use ($date) {
-                                        $query->whereHas('scores', fn ($query) => $query->whereDate('created_at', $date)
+                                    ->when(auth()->user()->isAdmin(), function ($query) use ($date, $team) {
+                                        $query->whereHas('scores', fn ($query) => $query
+                                            ->whereDate('created_at', $date)
+                                            ->when($team, fn ($query, string $team) => $query->whereHas('user', fn (Builder $query): Builder => $query->where('team', $team)))
                                         );
                                     })
                                     ->when(! auth()->user()->isAdmin(), function ($query) use ($date) {
