@@ -37,14 +37,14 @@ class PanelInterviewMonitoringReportExport implements WithMultipleSheets
         if (($this->filters['status'] ?? 'all') !== 'rated') {
             $sheets[] = new PanelInterviewMonitoringSheet(
                 $this->unratedRows(),
-                ['Team', 'Panelist', 'Unrated Students Count', 'Students Not Yet Rated'],
+                ['Team', 'Panelist', 'Unrated Students Count'],
                 'Unrated'
             );
         }
 
         $sheets[] = new PanelInterviewMonitoringSheet(
             $this->teamCoverageRows(),
-            ['Team', 'Total Students Rated by Team', 'Total Students Not Yet Rated by Team', 'Completion Percentage', 'Students Without Team Rating'],
+            ['Team', 'Total Students Rated by Team', 'Total Students Not Yet Rated by Team', 'Completion Percentage'],
             'Team Coverage'
         );
 
@@ -72,32 +72,25 @@ class PanelInterviewMonitoringReportExport implements WithMultipleSheets
                 'team' => $this->teamLabel($row->team),
                 'panelist' => $this->safeSpreadsheetText($row->panelist_name),
                 'unrated_students_count' => (int) $row->unrated_students_count,
-                'unrated_students' => $this->safeSpreadsheetText(str_replace('||', "\n", (string) $row->unrated_students)),
             ]);
     }
 
     protected function teamCoverageRows(): Collection
     {
         $totalStudents = $this->filteredStudentCount();
-        $unratedStudentsByTeam = $this->teamUnratedStudentsQuery()
-            ->get()
-            ->keyBy('team');
 
-        return $this->teamRatedCountsQuery()
-            ->get()
-            ->map(function ($row) use ($totalStudents, $unratedStudentsByTeam): array {
-                $ratedStudents = (int) $row->rated_students;
+        return $this->teamsForCoverage()
+            ->map(function (?string $team) use ($totalStudents): array {
+                $ratedStudents = $this->teamRatedStudentCount((string) $team);
                 $unratedStudents = max($totalStudents - $ratedStudents, 0);
-                $unratedRow = $unratedStudentsByTeam->get($row->team);
 
                 return [
-                    'team' => $this->teamLabel($row->team),
+                    'team' => $this->teamLabel($team),
                     'rated_students' => $ratedStudents,
                     'unrated_students' => $unratedStudents,
                     'completion_percentage' => $totalStudents > 0
                         ? round(($ratedStudents / $totalStudents) * 100, 2)
                         : 0.0,
-                    'unrated_student_names' => $this->safeSpreadsheetText(str_replace('||', "\n", (string) $unratedRow?->unrated_students)),
                 ];
             });
     }
@@ -147,91 +140,37 @@ class PanelInterviewMonitoringReportExport implements WithMultipleSheets
                 }
             })
             ->whereNull('student_scores.id')
-            ->selectRaw("
+            ->selectRaw('
                 panelist_students.panelist_id,
                 panelist_students.panelist_name,
                 panelist_students.team,
-                COUNT(panelist_students.student_id) as unrated_students_count,
-                GROUP_CONCAT(panelist_students.student_name ORDER BY panelist_students.student_name SEPARATOR '||') as unrated_students
-            ")
+                COUNT(panelist_students.student_id) as unrated_students_count
+            ')
             ->groupBy('panelist_students.panelist_id', 'panelist_students.panelist_name', 'panelist_students.team')
             ->orderBy('panelist_students.team')
             ->orderBy('panelist_students.panelist_name');
     }
 
-    protected function teamRatedCountsQuery(): Builder
+    protected function teamsForCoverage(): Collection
     {
-        return DB::query()
-            ->fromSub($this->teamsBaseQuery(), 'teams')
-            ->leftJoin('users as team_panelists', function ($join): void {
-                $join
-                    ->on('team_panelists.team', '=', 'teams.team')
-                    ->whereIn('team_panelists.id', $this->panelistIdsQuery());
-
-                if ($this->filters['panelistId'] ?? null) {
-                    $join->where('team_panelists.id', $this->filters['panelistId']);
-                }
-            })
-            ->leftJoin('student_scores', function ($join): void {
-                $join
-                    ->on('student_scores.user_id', '=', 'team_panelists.id')
-                    ->whereNull('student_scores.deleted_at');
-
-                if ($this->filters['startDate'] ?? null) {
-                    $join->whereDate('student_scores.created_at', '>=', $this->filters['startDate']);
-                }
-
-                if ($this->filters['endDate'] ?? null) {
-                    $join->whereDate('student_scores.created_at', '<=', $this->filters['endDate']);
-                }
-            })
-            ->leftJoin('students', function ($join): void {
-                $join->on('students.id', '=', 'student_scores.student_id');
-
-                if ($this->filters['municipality'] ?? null) {
-                    $join->where('students.municipality', $this->filters['municipality']);
-                }
-            })
-            ->selectRaw('teams.team as team, COUNT(DISTINCT students.id) as rated_students')
-            ->groupBy('teams.team')
-            ->orderBy('teams.team');
+        return $this->teamsBaseQuery()
+            ->pluck('users.team');
     }
 
-    protected function teamUnratedStudentsQuery(): Builder
+    protected function teamRatedStudentCount(string $team): int
     {
-        return DB::query()
-            ->fromSub($this->teamsBaseQuery(), 'teams')
-            ->crossJoinSub($this->filteredStudentsQuery(), 'students')
-            ->leftJoin('student_scores', function ($join): void {
-                $join
-                    ->on('student_scores.student_id', '=', 'students.student_id')
-                    ->whereNull('student_scores.deleted_at');
-
-                if ($this->filters['startDate'] ?? null) {
-                    $join->whereDate('student_scores.created_at', '>=', $this->filters['startDate']);
-                }
-
-                if ($this->filters['endDate'] ?? null) {
-                    $join->whereDate('student_scores.created_at', '<=', $this->filters['endDate']);
-                }
-            })
-            ->leftJoin('users as scoring_panelists', function ($join): void {
-                $join
-                    ->on('scoring_panelists.id', '=', 'student_scores.user_id')
-                    ->on('scoring_panelists.team', '=', 'teams.team');
-
-                if ($this->filters['panelistId'] ?? null) {
-                    $join->where('scoring_panelists.id', $this->filters['panelistId']);
-                }
-            })
-            ->whereNull('scoring_panelists.id')
-            ->selectRaw("
-                teams.team as team,
-                COUNT(DISTINCT students.student_id) as unrated_students_count,
-                GROUP_CONCAT(DISTINCT students.student_name ORDER BY students.student_name SEPARATOR '||') as unrated_students
-            ")
-            ->groupBy('teams.team')
-            ->orderBy('teams.team');
+        return DB::table('student_scores')
+            ->join('users', 'student_scores.user_id', '=', 'users.id')
+            ->join('students', 'student_scores.student_id', '=', 'students.id')
+            ->whereNull('student_scores.deleted_at')
+            ->where('users.team', $team)
+            ->whereIn('users.id', $this->panelistIdsQuery())
+            ->when($this->filters['startDate'] ?? null, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '>=', $date))
+            ->when($this->filters['endDate'] ?? null, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '<=', $date))
+            ->when($this->filters['panelistId'] ?? null, fn (Builder $query, string $panelistId): Builder => $query->where('users.id', $panelistId))
+            ->when($this->filters['municipality'] ?? null, fn (Builder $query, string $municipality): Builder => $query->where('students.municipality', $municipality))
+            ->distinct()
+            ->count('student_scores.student_id');
     }
 
     protected function panelistStudentBaseQuery(): Builder
@@ -252,6 +191,8 @@ class PanelInterviewMonitoringReportExport implements WithMultipleSheets
     {
         return DB::table('users')
             ->whereIn('users.id', $this->panelistIdsQuery())
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->when($this->filters['team'] ?? null, fn (Builder $query, string $team): Builder => $query->where('users.team', $team))
             ->when($this->filters['panelistId'] ?? null, fn (Builder $query, string $panelistId): Builder => $query->where('users.id', $panelistId))
             ->selectRaw('users.id as panelist_id, users.name as panelist_name, users.team as team');
@@ -261,6 +202,8 @@ class PanelInterviewMonitoringReportExport implements WithMultipleSheets
     {
         return DB::table('users')
             ->whereIn('users.id', $this->panelistIdsQuery())
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->when($this->filters['team'] ?? null, fn (Builder $query, string $team): Builder => $query->where('users.team', $team))
             ->when($this->filters['panelistId'] ?? null, fn (Builder $query, string $panelistId): Builder => $query->where('users.id', $panelistId))
             ->select('users.team')
@@ -289,6 +232,8 @@ class PanelInterviewMonitoringReportExport implements WithMultipleSheets
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', 'panelist')
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->select('users.id');
     }
 
