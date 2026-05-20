@@ -135,6 +135,8 @@ class PanelInterviewMonitoringReport extends Page
     {
         return User::query()
             ->whereHas('roles', fn ($query) => $query->where('name', 'panelist'))
+            ->whereNotNull('team')
+            ->where('team', '!=', '')
             ->when($this->team, fn ($query, string $team) => $query->where('team', $team))
             ->orderBy('team')
             ->orderBy('name')
@@ -364,6 +366,8 @@ class PanelInterviewMonitoringReport extends Page
             ->join('users', 'student_scores.user_id', '=', 'users.id')
             ->join('students', 'student_scores.student_id', '=', 'students.id')
             ->whereNull('student_scores.deleted_at')
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->when($this->startDate, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '>=', $date))
             ->when($this->endDate, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '<=', $date))
             ->when($this->team, fn (Builder $query, string $team): Builder => $query->where('users.team', $team))
@@ -382,6 +386,8 @@ class PanelInterviewMonitoringReport extends Page
                     ->join('users', 'student_scores.user_id', '=', 'users.id')
                     ->whereColumn('student_scores.student_id', 'students.id')
                     ->whereNull('student_scores.deleted_at')
+                    ->whereNotNull('users.team')
+                    ->where('users.team', '!=', '')
                     ->when($this->startDate, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '>=', $date))
                     ->when($this->endDate, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '<=', $date))
                     ->when($this->team, fn (Builder $query, string $team): Builder => $query->where('users.team', $team))
@@ -396,6 +402,8 @@ class PanelInterviewMonitoringReport extends Page
     {
         return DB::table('users')
             ->whereIn('users.id', $this->panelistIdsQuery())
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->when($this->team, fn (Builder $query, string $team): Builder => $query->where('users.team', $team))
             ->when($this->panelistId, fn (Builder $query, string $panelistId): Builder => $query->where('users.id', $panelistId))
             ->distinct()
@@ -409,6 +417,8 @@ class PanelInterviewMonitoringReport extends Page
             ->join('users', 'student_scores.user_id', '=', 'users.id')
             ->join('students', 'student_scores.student_id', '=', 'students.id')
             ->whereNull('student_scores.deleted_at')
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->where('users.team', $team)
             ->when($this->panelistId, fn (Builder $query, string $panelistId): Builder => $query->where('users.id', $panelistId))
             ->when($this->startDate, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '>=', $date))
@@ -425,6 +435,8 @@ class PanelInterviewMonitoringReport extends Page
             ->join('students', 'student_scores.student_id', '=', 'students.id')
             ->whereNull('student_scores.deleted_at')
             ->whereIn('users.id', $this->panelistIdsQuery())
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->when($this->startDate, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '>=', $date))
             ->when($this->endDate, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '<=', $date))
             ->when($this->team, fn (Builder $query, string $team): Builder => $query->where('users.team', $team))
@@ -565,6 +577,8 @@ class PanelInterviewMonitoringReport extends Page
                     ->join('users', 'student_scores.user_id', '=', 'users.id')
                     ->whereColumn('student_scores.student_id', 'students.id')
                     ->whereNull('student_scores.deleted_at')
+                    ->whereNotNull('users.team')
+                    ->where('users.team', '!=', '')
                     ->where('users.team', $team)
                     ->when($this->panelistId, fn (Builder $query, string $panelistId): Builder => $query->where('users.id', $panelistId))
                     ->when($this->startDate, fn (Builder $query, string $date): Builder => $query->whereDate('student_scores.created_at', '>=', $date))
@@ -595,6 +609,8 @@ class PanelInterviewMonitoringReport extends Page
     {
         return DB::table('users')
             ->whereIn('users.id', $this->panelistIdsQuery())
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->when($this->team, fn (Builder $query, string $team): Builder => $query->where('users.team', $team))
             ->when($this->panelistId, fn (Builder $query, string $panelistId): Builder => $query->where('users.id', $panelistId))
             ->selectRaw('users.id as panelist_id, users.name as panelist_name, users.team as team');
@@ -604,6 +620,8 @@ class PanelInterviewMonitoringReport extends Page
     {
         return DB::table('users')
             ->whereIn('users.id', $this->panelistIdsQuery())
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->when($this->team, fn (Builder $query, string $team): Builder => $query->where('users.team', $team))
             ->when($this->panelistId, fn (Builder $query, string $panelistId): Builder => $query->where('users.id', $panelistId))
             ->select('users.team')
@@ -627,6 +645,8 @@ class PanelInterviewMonitoringReport extends Page
             })
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->where('roles.name', 'panelist')
+            ->whereNotNull('users.team')
+            ->where('users.team', '!=', '')
             ->select('users.id');
     }
 }
