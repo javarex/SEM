@@ -355,7 +355,7 @@ class PanelInterviewMonitoringReport extends Page
                 student_scores.student_id,
                 GROUP_CONCAT(DISTINCT users.team ORDER BY users.team SEPARATOR '||') as teams,
                 GROUP_CONCAT(DISTINCT CONCAT(users.name, ' (', COALESCE(users.team, 'No Team'), ')') ORDER BY users.team, users.name SEPARATOR '||') as panelists,
-                GROUP_CONCAT(DISTINCT DATE(student_scores.created_at) ORDER BY DATE(student_scores.created_at) SEPARATOR '||') as rating_dates
+                GROUP_CONCAT(DISTINCT student_scores.created_at ORDER BY student_scores.created_at SEPARATOR '||') as rating_dates
             ")
             ->groupBy('student_scores.student_id');
     }

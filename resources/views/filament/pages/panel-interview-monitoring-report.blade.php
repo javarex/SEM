@@ -5,6 +5,10 @@
         $formatTeams = fn (mixed $teams): string => collect($studentSamples($teams))
             ->map(fn (?string $team): string => $formatTeam($team))
             ->implode(', ');
+        $formatRatingDateTimes = fn (mixed $dates): string => collect($studentSamples($dates))
+            ->filter()
+            ->map(fn (string $date): string => \Carbon\Carbon::parse($date)->format('M j, Y g:i A'))
+            ->implode(', ');
     @endphp
 
     <div class="space-y-6">
@@ -244,7 +248,7 @@
                                     <th class="px-4 py-3 text-center">Rating Count</th>
                                     <th class="px-4 py-3">Teams Involved</th>
                                     <th class="px-4 py-3">Panelists</th>
-                                    <th class="px-4 py-3">Rating Dates</th>
+                                    <th class="px-4 py-3">Rating Date/Time</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -261,7 +265,7 @@
                                                 @endforeach
                                             </div>
                                         </td>
-                                        <td class="px-4 py-3">{{ collect($studentSamples($row->rating_dates))->implode(', ') ?: 'N/A' }}</td>
+                                        <td class="px-4 py-3">{{ $formatRatingDateTimes($row->rating_dates) ?: 'N/A' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
