@@ -70,22 +70,22 @@ class StudentExport implements WithMultipleSheets
             'pcro_remarks' => $this->safeSpreadsheetText($student->cao_remarks),
             'panel_remarks' => $this->safeSpreadsheetText($this->panelRemarks($scores)),
             'category' => $this->safeSpreadsheetText($student->category),
-            'written_exam_score_raw' => $this->roundedScore($examScore),
-            'panel_interview_score_average' => $this->roundedScore($panelAverage),
-            'written_exam_score_weighted' => $this->roundedScore($examScoreWeighted),
-            'panel_interview_score_weighted' => $this->roundedScore($panelScoreWeighted),
-            'overall_score' => $this->roundedScore($overallScore),
+            'written_exam_score_raw' => $this->scoreValue($examScore),
+            'panel_interview_score_average' => $this->scoreValue($panelAverage),
+            'written_exam_score_weighted' => $this->scoreValue($examScoreWeighted),
+            'panel_interview_score_weighted' => $this->scoreValue($panelScoreWeighted),
+            'overall_score' => $this->scoreValue($overallScore),
             'rank' => null,
         ];
     }
 
-    private function roundedScore(float|int|null $score): ?int
+    private function scoreValue(float|int|null $score): float|int|null
     {
         if ($score === null) {
             return null;
         }
 
-        return (int) round((float) $score);
+        return $score;
     }
 
     private function panelRemarks(Collection $scores): ?string
