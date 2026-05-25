@@ -424,18 +424,25 @@ class StudentResource extends Resource implements HasShieldPermissions
                                 $scoreData['socio_economic'] = blank($scoreData['socio_economic'] ?? null) ? 0 : $scoreData['socio_economic'];
                             }
 
+                            Student::query()
+                                ->whereKey($record->id)
+                                ->lockForUpdate()
+                                ->first();
+
+                            StudentScore::withTrashed()
+                                ->where('student_id', $record->id)
+                                ->where('user_id', $user->getAuthIdentifier())
+                                ->whereNotNull('deleted_at')
+                                ->where('active_score_key', 1)
+                                ->update(['active_score_key' => null]);
+
                             $score = StudentScore::query()
                                 ->where('student_id', $record->id)
-                                ->where('user_id', auth()->id())
+                                ->where('user_id', $user->getAuthIdentifier())
                                 ->latest('id')
                                 ->first();
 
                             if ($score === null) {
-                                Student::query()
-                                    ->whereKey($record->id)
-                                    ->lockForUpdate()
-                                    ->first();
-
                                 $panelistScoreCount = StudentScore::query()
                                     ->where('student_id', $record->id)
                                     ->distinct()

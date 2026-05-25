@@ -30,6 +30,17 @@ class StudentScore extends Model
         'dq',
     ];
 
+    protected static function booted(): void
+    {
+        static::softDeleted(function (StudentScore $score): void {
+            $score->forceFill(['active_score_key' => null])->saveQuietly();
+        });
+
+        static::restoring(function (StudentScore $score): void {
+            $score->active_score_key = 1;
+        });
+    }
+
     /**
      * @return array<int, string>
      */
