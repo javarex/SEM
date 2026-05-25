@@ -17,6 +17,8 @@ class StudentExportTest extends TestCase
             'fullname' => 'Test Student',
             'exam_score' => 89.5,
             'type' => 'Academic',
+            'barangay' => 'Poblacion',
+            'purok' => 'Purok 1',
         ]);
 
         $student->setRelation('scores', new Collection([
@@ -35,6 +37,8 @@ class StudentExportTest extends TestCase
         $mapStudent = new ReflectionMethod(StudentExport::class, 'mapStudent');
         $exportedStudent = $mapStudent->invoke(new StudentExport('all'), $student);
 
+        $this->assertSame('Poblacion', $exportedStudent['barangay']);
+        $this->assertSame('Purok 1', $exportedStudent['purok']);
         $this->assertSame(89.5, $exportedStudent['written_exam_score_raw']);
         $this->assertSame(16.75, $exportedStudent['panel_interview_score_average']);
         $this->assertSame(44.75, $exportedStudent['written_exam_score_weighted']);

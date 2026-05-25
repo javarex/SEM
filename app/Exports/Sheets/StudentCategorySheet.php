@@ -35,6 +35,8 @@ class StudentCategorySheet implements FromCollection, WithColumnWidths, WithHead
             'Name',
             'sex',
             'Municipality',
+            'barangay',
+            'purok',
             'school',
             'family background',
             'ethnicity',
@@ -56,7 +58,7 @@ class StudentCategorySheet implements FromCollection, WithColumnWidths, WithHead
     {
         $highestRow = $sheet->getHighestRow();
 
-        $sheet->getStyle("A1:Q{$highestRow}")
+        $sheet->getStyle("A1:S{$highestRow}")
             ->getAlignment()
             ->setVertical(Alignment::VERTICAL_TOP)
             ->setWrapText(true);
@@ -77,18 +79,20 @@ class StudentCategorySheet implements FromCollection, WithColumnWidths, WithHead
             'C' => 21.7,
             'D' => 21.7,
             'E' => 21.7,
-            'F' => 11.4,
-            'G' => 14.6,
+            'F' => 21.7,
+            'G' => 11.4,
             'H' => 14.6,
-            'I' => 17.1,
-            'J' => 24,
-            'K' => 11.4,
-            'L' => 12.1,
-            'M' => 18,
+            'I' => 14.6,
+            'J' => 17.1,
+            'K' => 24,
+            'L' => 11.4,
+            'M' => 12.1,
             'N' => 18,
             'O' => 18,
-            'P' => 14,
-            'Q' => 10,
+            'P' => 18,
+            'Q' => 14,
+            'R' => 10,
+            'S' => 10,
         ];
     }
 

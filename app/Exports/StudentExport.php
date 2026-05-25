@@ -62,6 +62,8 @@ class StudentExport implements WithMultipleSheets
             'name' => $this->safeSpreadsheetText($student->fullname),
             'sex' => $this->safeSpreadsheetText($student->sex),
             'municipality' => $this->safeSpreadsheetText($student->municipality),
+            'barangay' => $this->safeSpreadsheetText($student->barangay),
+            'purok' => $this->safeSpreadsheetText($student->purok),
             'school' => $this->safeSpreadsheetText($student->school),
             'family_background' => $this->safeSpreadsheetText($student->family_background),
             'ethnicity' => $this->safeSpreadsheetText($student->ethnicity),
